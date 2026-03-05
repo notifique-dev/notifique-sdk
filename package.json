@@ -1,7 +1,7 @@
 {
-    "name": "zenvio-monorepo",
+    "name": "notifique-monorepo",
     "private": true,
-    "description": "Zenvio SDK Monorepo",
+    "description": "Notifique SDK Monorepo",
     "workspaces": [
         "packages/*"
     ],

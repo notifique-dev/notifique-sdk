@@ -2,44 +2,37 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Zenvio\Zenvio;
+use Notifique\Notifique;
+use Notifique\Exception\NotifiqueApiException;
 
-// 1. Initialize the client
-$zenvio = new Zenvio('your_api_key_here');
+$notifique = new Notifique(getenv('NOTIFIQUE_API_KEY') ?: 'your_api_key_here');
 
-$phoneId = 'your_phone_id_here';
-$recipient = '5511999999999';
+$phoneId = getenv('NOTIFIQUE_INSTANCE_ID') ?: 'your_phone_id_here';
+$recipient = getenv('MY_PHONE') ?: '5511999999999';
 
-echo "--- Starting Zenvio PHP SDK Example ---\n";
+echo "--- Notifique PHP SDK Example ---\n";
 
-// 2. Simple text message
-echo "\n1. Sending simplified text...\n";
-$res1 = $zenvio->whatsapp->sendText($phoneId, $recipient, "Hello from PHP! 🐘");
-echo "Result: " . ($res1->success ? "Success" : "Failed") . "\n";
-if ($res1->error)
-    echo "Error: {$res1->error}\n";
+try {
+    echo "\n1. Sending text...\n";
+    $res1 = $notifique->whatsapp->sendText($phoneId, [$recipient], "Hello from PHP! 🐘");
+    echo "Result: " . (($res1['success'] ?? false) ? "Success" : "Failed") . "\n";
+    if (!empty($res1['data']['messageIds'])) {
+        echo "Message IDs: " . implode(', ', $res1['data']['messageIds']) . "\n";
+    }
 
-// 3. Template message
-echo "\n2. Sending template message...\n";
-$res2 = $zenvio->whatsapp->send($phoneId, [
-    'to' => [$recipient],
-    'type' => 'template',
-    'payload' => [
-        'key' => 'welcome_template',
-        'language' => 'pt_BR',
-        'variables' => ['PHP Developer']
-    ]
-]);
-echo "Result: " . ($res2->success ? "Success" : "Failed") . "\n";
-
-// 4. Image message
-echo "\n3. Sending image message...\n";
-$res3 = $zenvio->whatsapp->send($phoneId, [
-    'to' => [$recipient],
-    'type' => 'image',
-    'payload' => [
-        'url' => 'https://placehold.co/600x400/png',
-        'caption' => 'Zenvio Logo'
-    ]
-]);
-echo "Result: " . ($res3->success ? "Success" : "Failed") . "\n";
+    echo "\n2. Sending image...\n";
+    $res2 = $notifique->whatsapp->send($phoneId, [
+        'to' => [$recipient],
+        'type' => 'image',
+        'payload' => [
+            'mediaUrl' => 'https://placehold.co/600x400/png',
+            'fileName' => 'image.png',
+            'mimetype' => 'image/png',
+            'caption' => 'Notifique Logo',
+        ]
+    ]);
+    echo "Result: " . (($res2['success'] ?? false) ? "Success" : "Failed") . "\n";
+} catch (NotifiqueApiException $e) {
+    echo "Error: " . $e->getDisplayMessage() . "\n";
+    exit(1);
+}

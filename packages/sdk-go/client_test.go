@@ -1,4 +1,4 @@
-package zenvio
+package notifique
 
 import (
 	"encoding/json"
@@ -17,10 +17,10 @@ func TestWhatsAppSendText(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(WhatsAppSendResponse{
-			MessageIDs: []string{"msg-123"},
-			Status:     "queued",
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(WhatsAppSendEnvelope{
+			Success: true,
+			Data:    WhatsAppSendResponse{MessageIDs: []string{"msg-123"}, Status: "QUEUED"},
 		})
 	}))
 	defer server.Close()
@@ -30,7 +30,7 @@ func TestWhatsAppSendText(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SendText: %v", err)
 	}
-	if len(resp.MessageIDs) != 1 || resp.MessageIDs[0] != "msg-123" {
+	if len(resp.Data.MessageIDs) != 1 || resp.Data.MessageIDs[0] != "msg-123" {
 		t.Errorf("unexpected response: %+v", resp)
 	}
 }
@@ -55,8 +55,11 @@ func TestWhatsAppSendError(t *testing.T) {
 
 func TestWhatsAppSendWithParams(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(WhatsAppSendResponse{MessageIDs: []string{"m1"}, Status: "queued"})
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(WhatsAppSendEnvelope{
+			Success: true,
+			Data:    WhatsAppSendResponse{MessageIDs: []string{"m1"}, Status: "QUEUED"},
+		})
 	}))
 	defer server.Close()
 
@@ -70,25 +73,51 @@ func TestWhatsAppSendWithParams(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resp.MessageIDs) != 1 || resp.MessageIDs[0] != "m1" {
+	if len(resp.Data.MessageIDs) != 1 || resp.Data.MessageIDs[0] != "m1" {
 		t.Errorf("unexpected: %+v", resp)
+	}
+}
+
+func TestIdempotencyKeyHeader(t *testing.T) {
+	var headersOk bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		headersOk = r.Header.Get("Idempotency-Key") == "my-key-123" && r.Header.Get("x-idempotency-key") == "my-key-123"
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(WhatsAppSendEnvelope{
+			Success: true,
+			Data:    WhatsAppSendResponse{MessageIDs: []string{"msg-1"}, Status: "QUEUED"},
+		})
+	}))
+	defer server.Close()
+
+	client := NewClientWithConfig(Config{APIKey: "k", BaseURL: server.URL})
+	opts := &SendOptions{IdempotencyKey: "my-key-123"}
+	_, err := client.WhatsApp.SendText("inst-1", []string{"5511999999999"}, "Hi", opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !headersOk {
+		t.Error("Idempotency-Key or x-idempotency-key header was not sent correctly")
 	}
 }
 
 func TestWhatsAppGetMessage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(WhatsAppMessageStatus{MessageID: "msg-1", Status: "delivered"})
+		json.NewEncoder(w).Encode(WhatsAppMessageEnvelope{
+			Success: true,
+			Data:    WhatsAppMessageStatus{MessageID: "msg-1", Status: "DELIVERED"},
+		})
 	}))
 	defer server.Close()
 
 	client := NewClientWithConfig(Config{APIKey: "k", BaseURL: server.URL})
-	status, err := client.WhatsApp.GetMessage("msg-1")
+	envelope, err := client.WhatsApp.GetMessage("msg-1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if status.MessageID != "msg-1" || status.Status != "delivered" {
-		t.Errorf("unexpected: %+v", status)
+	if envelope.Data.MessageID != "msg-1" || envelope.Data.Status != "DELIVERED" {
+		t.Errorf("unexpected: %+v", envelope)
 	}
 }
 
@@ -120,11 +149,11 @@ func TestSmsSend(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		r := SmsSendResponse{Success: true}
-		r.Data.Status = "queued"
-		r.Data.Count = 1
-		r.Data.SmsIDs = []string{"sms-1"}
-		json.NewEncoder(w).Encode(r)
+		rsp := SmsSendResponse{Success: true}
+		rsp.Data.Status = "queued"
+		rsp.Data.Count = 1
+		rsp.Data.SmsIDs = []string{"sms-1"}
+		json.NewEncoder(w).Encode(rsp)
 	}))
 	defer server.Close()
 
@@ -141,10 +170,10 @@ func TestSmsSend(t *testing.T) {
 func TestSmsGet(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		r := SmsStatusResponse{Success: true}
-		r.Data.SmsID = "sms-1"
-		r.Data.Status = "delivered"
-		json.NewEncoder(w).Encode(r)
+		rsp := SmsStatusResponse{Success: true}
+		rsp.Data.SmsID = "sms-1"
+		rsp.Data.Status = "delivered"
+		json.NewEncoder(w).Encode(rsp)
 	}))
 	defer server.Close()
 
@@ -160,7 +189,7 @@ func TestSmsGet(t *testing.T) {
 
 func TestSmsCancel(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/sms/sms-1/cancel" {
+		if r.URL.Path != "/sms/messages/sms-1/cancel" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -185,10 +214,10 @@ func TestSmsCancel(t *testing.T) {
 func TestEmailSend(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		r := EmailSendResponse{Success: true}
-		r.Data.EmailIDs = []string{"email-1"}
-		r.Data.Status = "queued"
-		json.NewEncoder(w).Encode(r)
+		rsp := EmailSendResponse{Success: true}
+		rsp.Data.EmailIDs = []string{"email-1"}
+		rsp.Data.Status = "queued"
+		json.NewEncoder(w).Encode(rsp)
 	}))
 	defer server.Close()
 
@@ -208,10 +237,10 @@ func TestEmailSend(t *testing.T) {
 func TestEmailCancel(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		r := EmailCancelResponse{Success: true}
-		r.Data.EmailID = "email-1"
-		r.Data.Status = "cancelled"
-		json.NewEncoder(w).Encode(r)
+		rsp := EmailCancelResponse{Success: true}
+		rsp.Data.EmailID = "email-1"
+		rsp.Data.Status = "cancelled"
+		json.NewEncoder(w).Encode(rsp)
 	}))
 	defer server.Close()
 
@@ -232,11 +261,11 @@ func TestMessagesSend(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		r := MessagesSendResponse{Success: true}
-		r.Data.MessageIDs = []string{"m1", "m2"}
-		r.Data.Status = "queued"
-		r.Data.Count = 2
-		json.NewEncoder(w).Encode(r)
+		rsp := MessagesSendResponse{Success: true}
+		rsp.Data.MessageIDs = []string{"m1", "m2"}
+		rsp.Data.Status = "queued"
+		rsp.Data.Count = 2
+		json.NewEncoder(w).Encode(rsp)
 	}))
 	defer server.Close()
 

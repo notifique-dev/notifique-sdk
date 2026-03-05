@@ -1,42 +1,41 @@
-# Zenvio .NET SDK
+# Notifique .NET SDK
 
-Official Zenvio SDK for .NET — WhatsApp, SMS, Email, and Template messaging.
+SDK oficial Notifique para .NET — WhatsApp, SMS, Email, Push e mensagens por template.
 
-## Requirements
+## Requisitos
 
-- .NET 8.0 or later
-- Zero external dependencies (uses only `System.Text.Json`)
+- .NET 8.0 ou superior
+- Sem dependências externas (apenas `System.Text.Json`)
 
-## Installation
+## Instalação
 
-### NuGet Package Manager
+### NuGet
 ```
-Install-Package Zenvio
+Install-Package Notifique
 ```
 
 ### .NET CLI
 ```bash
-dotnet add package Zenvio
+dotnet add package Notifique
 ```
 
-### PackageReference
-```xml
-<PackageReference Include="Zenvio" Version="0.1.0" />
-```
+## Uso rápido
 
-## Quick Start
+Recomendado: use `NotifiqueClient` com a base URL atual (`https://api.notifique.dev/v1`).
 
 ```csharp
-using Zenvio;
+using Notifique;
 
-var client = new ZenvioClient("your-api-key");
+var client = new NotifiqueClient("sua-api-key");
 
-// Send a WhatsApp text message
-var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello from .NET!");
+// Enviar mensagem de texto WhatsApp
+var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Olá!");
 
-Console.WriteLine($"Status: {response.Status}");
-Console.WriteLine($"Message IDs: {string.Join(", ", response.MessageIds)}");
+Console.WriteLine($"Status: {response.Data.Status}");
+Console.WriteLine($"Message IDs: {string.Join(", ", response.Data.MessageIds)}");
 ```
+
+Base URL padrão: `https://api.notifique.dev/v1`.
 
 ## WhatsApp
 
@@ -54,7 +53,7 @@ var response = await client.WhatsApp.SendTextAsync("instance-id",
 ### Send Media Message
 
 ```csharp
-using Zenvio.Models.WhatsApp;
+using Notifique.Models.WhatsApp;
 
 var parameters = new WhatsAppSendParams
 {
@@ -107,8 +106,16 @@ var response = await client.WhatsApp.SendAsync("instance-id", parameters);
 ### Message Operations
 
 ```csharp
-// Get message status
-var status = await client.WhatsApp.GetMessageAsync("message-id");
+// List messages (GET /v1/whatsapp/messages)
+var list = await client.WhatsApp.ListMessagesAsync();
+var listFiltered = await client.WhatsApp.ListMessagesAsync(new Dictionary<string, string> { { "page", "1" }, { "limit", "20" } });
+
+// Get message status (retorna envelope com .Data)
+var response = await client.WhatsApp.GetMessageAsync("message-id");
+var status = response.Data;
+
+// QR da instância
+var qr = await client.WhatsApp.GetInstanceQrAsync("instance-id");
 
 // Edit a message
 var edited = await client.WhatsApp.EditMessageAsync("message-id", "Updated text");
@@ -151,7 +158,7 @@ var deleted = await client.WhatsApp.DeleteInstanceAsync("instance-id");
 ### Send SMS
 
 ```csharp
-using Zenvio.Models.Sms;
+using Notifique.Models.Sms;
 
 var parameters = new SmsSendParams
 {
@@ -180,7 +187,7 @@ var cancelled = await client.Sms.CancelAsync("sms-id");
 ### Send Email
 
 ```csharp
-using Zenvio.Models.Email;
+using Notifique.Models.Email;
 
 var parameters = new EmailSendParams
 {
@@ -206,12 +213,30 @@ var status = await client.Email.GetAsync("email-id");
 var cancelled = await client.Email.CancelAsync("email-id");
 ```
 
+### Email Domains
+
+```csharp
+using Notifique.Models.Email;
+
+var domains = await client.EmailDomains.ListAsync();
+var created = await client.EmailDomains.CreateAsync(new CreateEmailDomainRequest { Domain = "meudominio.com" });
+var one = await client.EmailDomains.GetAsync("domain-id");
+var verified = await client.EmailDomains.VerifyAsync("domain-id");
+// verified.Verified indica se o domínio passou na verificação DNS
+```
+
+## Push
+
+- **Apps** — `ListAppsAsync()`, `GetAppAsync(id)`, `CreateAppAsync(PushAppCreateRequest)`, `UpdateAppAsync(id, PushAppUpdateRequest)`, `DeleteAppAsync(id)`
+- **Devices** — `ListDevicesAsync()`, `GetDeviceAsync(id)`, `RegisterDeviceAsync(PushDeviceRegisterRequest)`, `DeleteDeviceAsync(id)`
+- **Messages** — `SendMessageAsync(SendPushRequest)` (agendamento: `request.Schedule.SendAt` usa **sendAt** no JSON), `ListMessagesAsync()`, `GetMessageAsync(id)`, `CancelMessageAsync(id)` retorna `CancelPushResponse`
+
 ## Messages (Templates)
 
 ### Send Template Message
 
 ```csharp
-using Zenvio.Models.Messages;
+using Notifique.Models.Messages;
 
 var parameters = new MessagesSendParams
 {
@@ -230,7 +255,7 @@ var response = await client.Messages.SendAsync(parameters);
 All send operations support scheduling via the `Schedule` property:
 
 ```csharp
-using Zenvio.Models.Shared;
+using Notifique.Models.Shared;
 
 var parameters = new SmsSendParams
 {
@@ -242,14 +267,14 @@ var parameters = new SmsSendParams
 
 ## Error Handling
 
-All API errors throw a `ZenvioApiException` with the HTTP status code and response body:
+All API errors throw a `NotifiqueApiException` with the HTTP status code and response body:
 
 ```csharp
 try
 {
     await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"Status: {ex.StatusCode}");
     Console.WriteLine($"Body: {ex.ResponseBody}");
@@ -261,18 +286,15 @@ catch (ZenvioApiException ex)
 ### Custom Base URL
 
 ```csharp
-var client = new ZenvioClient("your-api-key", "https://custom-api.example.com/v1");
+var client = new NotifiqueClient("your-api-key", "https://custom-api.example.com/v1");
 ```
 
 ### Dependency Injection (IHttpClientFactory)
 
 ```csharp
-// In your DI setup
-services.AddHttpClient("Zenvio");
-
-// In your service
-var httpClient = httpClientFactory.CreateClient("Zenvio");
-var client = new ZenvioClient("your-api-key", "https://api.zenvio.com/v1", httpClient);
+services.AddHttpClient("Notifique");
+var httpClient = httpClientFactory.CreateClient("Notifique");
+var client = new NotifiqueClient("your-api-key", "https://api.notifique.dev/v1", httpClient);
 ```
 
 ### CancellationToken Support

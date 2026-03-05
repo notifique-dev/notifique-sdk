@@ -1,69 +1,67 @@
-# @zenvio/sdk-node
+# @notifique/sdk-node
 
-Official Zenvio SDK for Node.js and TypeScript.
+SDK oficial Notifique para Node.js e TypeScript.
 
-## Installation
+## Instalação
 
 ```bash
-npm install @zenvio/sdk-node
+npm install @notifique/sdk-node
 ```
 
-## Usage
+## Uso
 
 ```typescript
-import { Zenvio } from '@zenvio/sdk-node';
+import { Notifique } from '@notifique/sdk-node';
 
-const zenvio = new Zenvio({ apiKey: 'your-api-key' });
-const phoneId = 'your-phone-id';
+const notifique = new Notifique({ apiKey: 'sua-api-key' });
+const instanceId = 'id-da-instancia-whatsapp';
 
-// Simplified Text
-await zenvio.whatsapp.sendText(phoneId, '...', 'Hello!');
+// Texto
+await notifique.whatsapp.sendText(instanceId, '5511999999999', 'Olá!');
 
-// Full Send Method (Text)
-await zenvio.whatsapp.send(phoneId, {
-  to: ['...'],
+// Envio completo (texto)
+await notifique.whatsapp.send(instanceId, {
+  to: ['5511999999999'],
   type: 'text',
-  payload: { text: 'Hello!' }
+  payload: { message: 'Olá!' },
 });
 
-// Image Message
-await zenvio.whatsapp.send(phoneId, {
-  to: ['...'],
+// Imagem
+await notifique.whatsapp.send(instanceId, {
+  to: ['5511999999999'],
   type: 'image',
-  payload: { 
-    url: 'https://example.com/image.png',
-    caption: 'Check this out!'
-  }
+  payload: {
+    mediaUrl: 'https://example.com/image.png',
+    fileName: 'image.png',
+    mimetype: 'image/png',
+    caption: 'Legenda opcional',
+  },
 });
 
-// Template Message
-await zenvio.whatsapp.send(phoneId, {
-  to: ['...'],
-  type: 'template',
-  payload: {
-    key: 'order_status',
-    language: 'en_US',
-    variables: ['John', 'Shipped']
-  }
+// SMS
+await notifique.sms.send({ to: ['5511999999999'], message: 'SMS de teste' });
+
+// E-mail
+await notifique.email.send({
+  from: 'noreply@seudominio.com',
+  to: ['destino@email.com'],
+  subject: 'Assunto',
+  html: '<p>Corpo do e-mail</p>',
 });
 
-// Buttons (Interactive)
-await zenvio.whatsapp.send(phoneId, {
-  to: ['...'],
-  type: 'buttons',
-  payload: {
-    body: 'Did you like it?',
-    buttons: [
-      { id: 'yes', label: 'Yes' },
-      { id: 'no', label: 'No' }
-    ]
-  }
+// Push
+await notifique.push.messages.send({
+  to: ['device-id'],
+  title: 'Título',
+  body: 'Corpo da notificação',
 });
 ```
 
-## Features
+## Recursos
 
-- Strong TypeScript support with strictly typed payloads.
-- Automatic API key authorization.
-- Simple, namespaced API (`zenvio.whatsapp`).
-- Future-proof design for multiple communication channels.
+- Tipagem TypeScript com tipos do `@notifique/core`.
+- Autenticação via API Key.
+- API por namespaces: `whatsapp`, `sms`, `email`, `push`, `messages` (templates).
+- WhatsApp: envio, listagem, status, edição, cancelamento, instâncias e QR.
+- E-mail: envio, status, cancelamento e domínios (listar, criar, verificar).
+- Push: apps, dispositivos e mensagens.

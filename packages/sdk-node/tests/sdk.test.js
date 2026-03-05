@@ -8,50 +8,50 @@ const src_1 = require("../src");
 jest.mock('axios');
 const mockedAxios = axios_1.default;
 describe('Node.js SDK', () => {
-    let zenvio;
+    let notifique;
     beforeEach(() => {
         mockedAxios.create.mockReturnValue(mockedAxios);
         mockedAxios.isAxiosError.mockImplementation((payload) => !!payload?.isAxiosError);
-        zenvio = new src_1.Zenvio({ apiKey: 'test-api-key' });
+        notifique = new src_1.Notifique({ apiKey: 'test-api-key' });
     });
     it('should send a whatsapp message correctly', async () => {
-        const mockResponse = { data: { success: true, messageId: 'msg-123' } };
+        const mockResponse = { data: { success: true, data: { messageIds: ['msg-123'], status: 'queued' } } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        const result = await zenvio.whatsapp.send('phone-abc', {
+        const result = await notifique.whatsapp.send('instance-1', {
             to: ['5511999999999'],
             type: 'text',
-            payload: { text: 'Test message' }
+            payload: { message: 'Test message' }
         });
-        expect(mockedAxios.post).toHaveBeenCalledWith('/whatsapp/phone-abc/messages', expect.objectContaining({
+        expect(mockedAxios.post).toHaveBeenCalledWith('/whatsapp/messages', expect.objectContaining({
+            instanceId: 'instance-1',
             type: 'text',
-            payload: { text: 'Test message' }
+            payload: { message: 'Test message' }
         }));
         expect(result.success).toBe(true);
-        expect(result.messageId).toBe('msg-123');
+        expect(result.data.messageIds).toContain('msg-123');
     });
     it('should send a simple text message via sendText shortcut', async () => {
-        const mockResponse = { data: { success: true, messageId: 'msg-shortcut' } };
+        const mockResponse = { data: { success: true, data: { messageIds: ['msg-shortcut'], status: 'queued' } } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        const result = await zenvio.whatsapp.sendText('phone-abc', '5511999999999', 'Shortcut test');
-        expect(mockedAxios.post).toHaveBeenCalledWith('/whatsapp/phone-abc/messages', expect.objectContaining({
+        const result = await notifique.whatsapp.sendText('instance-1', '5511999999999', 'Shortcut test');
+        expect(mockedAxios.post).toHaveBeenCalledWith('/whatsapp/messages', expect.objectContaining({
+            instanceId: 'instance-1',
             to: ['5511999999999'],
             type: 'text',
-            payload: { text: 'Shortcut test' }
+            payload: { message: 'Shortcut test' }
         }));
         expect(result.success).toBe(true);
-        expect(result.messageId).toBe('msg-shortcut');
+        expect(result.data.messageIds).toContain('msg-shortcut');
     });
     it('should handle API errors gracefully', async () => {
         mockedAxios.post.mockRejectedValueOnce({
             isAxiosError: true,
             response: { data: { message: 'Invalid API Key' } }
         });
-        const result = await zenvio.whatsapp.send('phone-abc', {
+        await expect(notifique.whatsapp.send('instance-1', {
             to: ['5511999999999'],
             type: 'text',
             payload: { text: 'Test' }
-        });
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('Invalid API Key');
+        })).rejects.toThrow();
     });
 });

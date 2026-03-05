@@ -1,16 +1,16 @@
-defmodule Zenvio.MixProject do
+defmodule Notifique.MixProject do
   use Mix.Project
 
   @version "0.1.0"
 
   def project do
     [
-      app: :zenvio,
+      app: :notifique,
       version: @version,
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      description: "Official Zenvio SDK for Elixir",
+      description: "SDK oficial Notifique para Elixir",
       package: package()
     ]
   end
@@ -32,7 +32,7 @@ defmodule Zenvio.MixProject do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/zenvio/zenvio-sdk"}
+      links: %{"GitHub" => "https://github.com/notifique/notifique-sdk"}
     ]
   end
 end

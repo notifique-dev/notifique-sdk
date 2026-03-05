@@ -1,12 +1,33 @@
 import axios from 'axios';
 // Use dist so we test the built artifact (same as published package)
-import { Zenvio } from '../dist';
+import { Notifique } from '../dist';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+/** Cria um client mock com interceptors; os handlers do SDK (camelCase + NotifiqueApiError) são aplicados. */
+function createMockClient(mocks: { post: jest.Mock; get: jest.Mock; delete: jest.Mock; patch: jest.Mock; put?: jest.Mock }) {
+  let onFulfilled: (r: unknown) => unknown = (r) => r;
+  let onRejected: (e: unknown) => unknown = (e) => Promise.reject(e);
+  return {
+    post: (...args: unknown[]) => Promise.resolve(mocks.post(...args)).then(onFulfilled, onRejected),
+    get: (...args: unknown[]) => Promise.resolve(mocks.get(...args)).then(onFulfilled, onRejected),
+    delete: (...args: unknown[]) => Promise.resolve(mocks.delete(...args)).then(onFulfilled, onRejected),
+    patch: (...args: unknown[]) => Promise.resolve(mocks.patch(...args)).then(onFulfilled, onRejected),
+    put: (...args: unknown[]) => Promise.resolve((mocks.put ?? mocks.post)(...args)).then(onFulfilled, onRejected),
+    interceptors: {
+      response: {
+        use: (fulfilled?: (r: unknown) => unknown, rejected?: (e: unknown) => unknown) => {
+          if (fulfilled) onFulfilled = fulfilled;
+          if (rejected) onRejected = rejected;
+        },
+      },
+    },
+  };
+}
+
 describe('Node.js SDK — WhatsApp (API-aligned)', () => {
-  let zenvio: Zenvio;
+  let notifique: Notifique;
   let mockPost: jest.Mock;
   let mockGet: jest.Mock;
   let mockDelete: jest.Mock;
@@ -17,21 +38,18 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
     mockGet = jest.fn();
     mockDelete = jest.fn();
     mockPatch = jest.fn();
-    (mockedAxios.create as jest.Mock).mockReturnValue({
-      post: mockPost,
-      get: mockGet,
-      delete: mockDelete,
-      patch: mockPatch,
-    });
-    zenvio = new Zenvio({ apiKey: 'test-api-key' });
+    (mockedAxios.create as jest.Mock).mockReturnValue(
+      createMockClient({ post: mockPost, get: mockGet, delete: mockDelete, patch: mockPatch })
+    );
+    notifique = new Notifique({ apiKey: 'test-api-key' });
   });
 
-  it('sends via POST /whatsapp/messages with instance_id in body', async () => {
+  it('sends via POST /whatsapp/messages with instanceId in body', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { message_ids: ['msg-1'], status: 'queued' },
+      data: { success: true, data: { messageIds: ['msg-1'], status: 'QUEUED' } },
     });
 
-    const result = await zenvio.whatsapp.send('instance-abc', {
+    const result = await notifique.whatsapp.send('instance-abc', {
       to: ['5511999999999'],
       type: 'text',
       payload: { message: 'Test message' },
@@ -40,148 +58,177 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
     expect(mockPost).toHaveBeenCalledWith(
       '/whatsapp/messages',
       expect.objectContaining({
-        instance_id: 'instance-abc',
+        instanceId: 'instance-abc',
         to: ['5511999999999'],
         type: 'text',
         payload: { message: 'Test message' },
-      })
+      }),
+      undefined
     );
-    expect(result.message_ids).toEqual(['msg-1']);
-    expect(result.status).toBe('queued');
+    expect(result.data.messageIds).toEqual(['msg-1']);
+    expect(result.data.status).toBe('QUEUED');
   });
 
   it('sendText uses payload.message and POST /whatsapp/messages', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { message_ids: ['m1'], status: 'queued' },
+      data: { success: true, data: { messageIds: ['m1'], status: 'QUEUED' } },
     });
 
-    await zenvio.whatsapp.sendText('inst-1', '5511999999999', 'Hello');
+    await notifique.whatsapp.sendText('inst-1', '5511999999999', 'Hello');
 
     expect(mockPost).toHaveBeenCalledWith(
       '/whatsapp/messages',
       expect.objectContaining({
-        instance_id: 'inst-1',
+        instanceId: 'inst-1',
         to: ['5511999999999'],
         type: 'text',
         payload: { message: 'Hello' },
-      })
+      }),
+      undefined
     );
   });
 
   it('sendText accepts array of recipients', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { message_ids: ['m1', 'm2'], status: 'queued' },
+      data: { success: true, data: { messageIds: ['m1', 'm2'], status: 'QUEUED' } },
     });
 
-    await zenvio.whatsapp.sendText('inst-1', ['5511999999999', '5521988887777'], 'Hi');
+    await notifique.whatsapp.sendText('inst-1', ['5511999999999', '5521988887777'], 'Hi');
 
     expect(mockPost).toHaveBeenCalledWith(
       '/whatsapp/messages',
       expect.objectContaining({
         to: ['5511999999999', '5521988887777'],
         payload: { message: 'Hi' },
-      })
+      }),
+      undefined
     );
   });
 
-  it('sends image with payload.media_url, file_name, mimetype', async () => {
+  it('sends image with payload.mediaUrl, fileName, mimetype', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { message_ids: ['img-1'], status: 'queued' },
+      data: { success: true, data: { messageIds: ['img-1'], status: 'QUEUED' } },
     });
 
-    await zenvio.whatsapp.send('inst-1', {
+    await notifique.whatsapp.send('inst-1', {
       to: ['5511999999999'],
       type: 'image',
-      payload: { media_url: 'https://example.com/image.png', file_name: 'image.png', mimetype: 'image/png' },
+      payload: { mediaUrl: 'https://example.com/image.png', fileName: 'image.png', mimetype: 'image/png' },
     });
 
     expect(mockPost).toHaveBeenCalledWith(
       '/whatsapp/messages',
       expect.objectContaining({
         type: 'image',
-        payload: { media_url: 'https://example.com/image.png', file_name: 'image.png', mimetype: 'image/png' },
-      })
+        payload: { mediaUrl: 'https://example.com/image.png', fileName: 'image.png', mimetype: 'image/png' },
+      }),
+      undefined
     );
   });
 
-  it('sends video, audio, document with media_url, file_name, mimetype', async () => {
-    mockPost.mockResolvedValue({ data: { message_ids: ['x'], status: 'queued' } });
+  it('sends video, audio, document with mediaUrl, fileName, mimetype', async () => {
+    mockPost.mockResolvedValue({ data: { success: true, data: { messageIds: ['x'], status: 'QUEUED' } } });
 
-    await zenvio.whatsapp.send('p', { to: ['1'], type: 'video', payload: { media_url: 'https://v.mp4', file_name: 'v.mp4', mimetype: 'video/mp4' } });
-    expect(mockPost).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ type: 'video', payload: { media_url: 'https://v.mp4', file_name: 'v.mp4', mimetype: 'video/mp4' } }));
+    await notifique.whatsapp.send('p', { to: ['1'], type: 'video', payload: { mediaUrl: 'https://v.mp4', fileName: 'v.mp4', mimetype: 'video/mp4' } });
+    await notifique.whatsapp.send('p', { to: ['1'], type: 'audio', payload: { mediaUrl: 'https://a.mp3', fileName: 'a.mp3', mimetype: 'audio/mpeg' } });
+    await notifique.whatsapp.send('p', { to: ['1'], type: 'document', payload: { mediaUrl: 'https://d.pdf', fileName: 'd.pdf', mimetype: 'application/pdf' } });
 
-    await zenvio.whatsapp.send('p', { to: ['1'], type: 'audio', payload: { media_url: 'https://a.mp3', file_name: 'a.mp3', mimetype: 'audio/mpeg' } });
-    expect(mockPost).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ type: 'audio' }));
-
-    await zenvio.whatsapp.send('p', { to: ['1'], type: 'document', payload: { media_url: 'https://d.pdf', file_name: 'd.pdf', mimetype: 'application/pdf' } });
-    expect(mockPost).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ type: 'document' }));
+    expect(mockPost).toHaveBeenNthCalledWith(1, '/whatsapp/messages', expect.objectContaining({ type: 'video', payload: { mediaUrl: 'https://v.mp4', fileName: 'v.mp4', mimetype: 'video/mp4' } }), undefined);
+    expect(mockPost).toHaveBeenNthCalledWith(2, '/whatsapp/messages', expect.objectContaining({ type: 'audio', payload: { mediaUrl: 'https://a.mp3', fileName: 'a.mp3', mimetype: 'audio/mpeg' } }), undefined);
+    expect(mockPost).toHaveBeenNthCalledWith(3, '/whatsapp/messages', expect.objectContaining({ type: 'document', payload: { mediaUrl: 'https://d.pdf', fileName: 'd.pdf', mimetype: 'application/pdf' } }), undefined);
   });
 
   it('getMessage calls GET /whatsapp/messages/:messageId', async () => {
     mockGet.mockResolvedValueOnce({
       data: {
-        message_id: 'msg-1',
-        to: '5511999999999',
-        type: 'text',
-        status: 'sent',
-        created_at: '2025-01-01T00:00:00.000Z',
+        success: true,
+        data: {
+          messageId: 'msg-1',
+          to: '5511999999999',
+          type: 'text',
+          status: 'SENT',
+          created_at: '2025-01-01T00:00:00.000Z',
+        },
       },
     });
 
-    const result = await zenvio.whatsapp.getMessage('msg-1');
+    const result = await notifique.whatsapp.getMessage('msg-1');
 
     expect(mockGet).toHaveBeenCalledWith('/whatsapp/messages/msg-1');
-    expect(result.message_id).toBe('msg-1');
-    expect(result.status).toBe('sent');
+    expect(result.data.messageId).toBe('msg-1');
+    expect(result.data.status).toBe('SENT');
   });
 
   it('deleteMessage calls DELETE /whatsapp/messages/:messageId', async () => {
     mockDelete.mockResolvedValueOnce({
-      data: { success: true, message_ids: ['msg-1'], status: 'deleted' },
+      data: { success: true, data: { messageId: 'msg-1', status: 'DELETED' } },
     });
 
-    const result = await zenvio.whatsapp.deleteMessage('msg-1');
+    const result = await notifique.whatsapp.deleteMessage('msg-1');
 
     expect(mockDelete).toHaveBeenCalledWith('/whatsapp/messages/msg-1');
-    expect(result.status).toBe('deleted');
+    expect(result.success).toBe(true);
+    expect(result.data.messageId).toBe('msg-1');
+    expect(result.data.status).toBe('DELETED');
   });
 
   it('editMessage calls PATCH /whatsapp/messages/:messageId/edit', async () => {
     mockPatch.mockResolvedValueOnce({
-      data: { success: true, message_ids: ['msg-1'], status: 'edited' },
+      data: { success: true, data: { messageId: 'msg-1', status: 'EDITED' } },
     });
 
-    const result = await zenvio.whatsapp.editMessage('msg-1', { text: 'New text' });
+    const result = await notifique.whatsapp.editMessage('msg-1', { text: 'New text' });
 
     expect(mockPatch).toHaveBeenCalledWith('/whatsapp/messages/msg-1/edit', { text: 'New text' });
-    expect(result.status).toBe('edited');
+    expect(result.success).toBe(true);
+    expect(result.data.messageId).toBe('msg-1');
+    expect(result.data.status).toBe('EDITED');
   });
 
   it('cancelMessage calls POST /whatsapp/messages/:messageId/cancel', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { success: true, message_ids: ['msg-1'], status: 'cancelled' },
+      data: { success: true, data: { messageId: 'msg-1', status: 'CANCELLED' } },
     });
 
-    const result = await zenvio.whatsapp.cancelMessage('msg-1');
+    const result = await notifique.whatsapp.cancelMessage('msg-1');
 
     expect(mockPost).toHaveBeenCalledWith('/whatsapp/messages/msg-1/cancel');
-    expect(result.status).toBe('cancelled');
+    expect(result.success).toBe(true);
+    expect(result.data.messageId).toBe('msg-1');
+    expect(result.data.status).toBe('CANCELLED');
   });
 
   it('listInstances calls GET /whatsapp/instances', async () => {
     mockGet.mockResolvedValueOnce({
       data: {
         success: true,
-        data: [{ id: 'i1', name: 'My Instance', status: 'ACTIVE' }],
+        data: [{ id: 'i1', name: 'My Instance', phoneNumber: '5511999999999', status: 'ACTIVE', createdAt: '2025-01-01T00:00:00.000Z', updatedAt: '2025-01-01T00:00:00.000Z' }],
         pagination: { total: 1, page: 1, limit: 10, totalPages: 1 },
       },
     });
 
-    const result = await zenvio.whatsapp.listInstances({ page: '1' });
+    const result = await notifique.whatsapp.listInstances({ page: '1' });
 
     expect(mockGet).toHaveBeenCalledWith('/whatsapp/instances', { params: { page: '1' } });
     expect(result.data).toHaveLength(1);
     expect(result.data[0].id).toBe('i1');
+    expect(result.data[0].status).toBe('ACTIVE');
+  });
+
+  it('getInstanceQr calls GET /whatsapp/instances/:id/qr', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { status: 'PENDING', base64: 'data:image/png;base64,...' },
+      },
+    });
+
+    const result = await notifique.whatsapp.getInstanceQr('i1');
+
+    expect(mockGet).toHaveBeenCalledWith('/whatsapp/instances/i1/qr');
+    expect(result.success).toBe(true);
+    expect(result.data.status).toBe('PENDING');
+    expect(result.data.qrcodeBase64).toBe('data:image/png;base64,...');
   });
 
   it('getInstance calls GET /whatsapp/instances/:id', async () => {
@@ -189,7 +236,7 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
       data: { success: true, data: { id: 'i1', name: 'One', status: 'ACTIVE', phoneNumber: '5511999999999', createdAt: '', updatedAt: '' } },
     });
 
-    const result = await zenvio.whatsapp.getInstance('i1');
+    const result = await notifique.whatsapp.getInstance('i1');
 
     expect(mockGet).toHaveBeenCalledWith('/whatsapp/instances/i1');
     expect(result.data.id).toBe('i1');
@@ -201,12 +248,12 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
         success: true,
         data: {
           instance: { id: 'new-1', name: 'New', status: 'PENDING', phoneNumber: null, createdAt: '' },
-          evolution: { base64: 'qr...' },
+          connection: { base64: 'qr...' },
         },
       },
     });
 
-    const result = await zenvio.whatsapp.createInstance({ name: 'My Instance' });
+    const result = await notifique.whatsapp.createInstance({ name: 'My Instance' });
 
     expect(mockPost).toHaveBeenCalledWith('/whatsapp/instances', { name: 'My Instance' });
     expect(result.data.instance.name).toBe('New');
@@ -214,10 +261,10 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
 
   it('disconnectInstance calls POST /whatsapp/instances/:id/disconnect', async () => {
     mockPost.mockResolvedValueOnce({
-      data: { success: true, data: { instance_id: 'i1', status: 'DISCONNECTED' } },
+      data: { success: true, data: { instanceId: 'i1', status: 'DISCONNECTED' } },
     });
 
-    const result = await zenvio.whatsapp.disconnectInstance('i1');
+    const result = await notifique.whatsapp.disconnectInstance('i1');
 
     expect(mockPost).toHaveBeenCalledWith('/whatsapp/instances/i1/disconnect');
     expect(result.data.status).toBe('DISCONNECTED');
@@ -225,10 +272,10 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
 
   it('deleteInstance calls DELETE /whatsapp/instances/:id', async () => {
     mockDelete.mockResolvedValueOnce({
-      data: { success: true, data: { instance_id: 'i1', status: 'deleted' }, message: 'Instance removed.' },
+      data: { success: true, data: { instanceId: 'i1', status: 'deleted' }, message: 'Instance removed.' },
     });
 
-    const result = await zenvio.whatsapp.deleteInstance('i1');
+    const result = await notifique.whatsapp.deleteInstance('i1');
 
     expect(mockDelete).toHaveBeenCalledWith('/whatsapp/instances/i1');
     expect(result.data.status).toBe('deleted');
@@ -236,18 +283,15 @@ describe('Node.js SDK — WhatsApp (API-aligned)', () => {
 });
 
 describe('Node.js SDK — Messages (template)', () => {
-  let zenvio: Zenvio;
+  let notifique: Notifique;
   let mockPost: jest.Mock;
 
   beforeEach(() => {
     mockPost = jest.fn();
-    (mockedAxios.create as jest.Mock).mockReturnValue({
-      post: mockPost,
-      get: jest.fn(),
-      delete: jest.fn(),
-      patch: jest.fn(),
-    });
-    zenvio = new Zenvio({ apiKey: 'test-key' });
+    (mockedAxios.create as jest.Mock).mockReturnValue(
+      createMockClient({ post: mockPost, get: jest.fn(), delete: jest.fn(), patch: jest.fn() })
+    );
+    notifique = new Notifique({ apiKey: 'test-key' });
   });
 
   it('messages.send calls POST /templates/send with to, template, variables, channels', async () => {
@@ -255,7 +299,7 @@ describe('Node.js SDK — Messages (template)', () => {
       data: {
         success: true,
         data: {
-          message_ids: ['msg-1'],
+          messageIds: ['msg-1'],
           sms_ids: ['sms-1'],
           email_ids: ['em-1'],
           status: 'queued',
@@ -264,12 +308,12 @@ describe('Node.js SDK — Messages (template)', () => {
       },
     });
 
-    const result = await zenvio.messages.send({
+    const result = await notifique.messages.send({
       to: ['5511999999999', 'user@example.com'],
       template: 'welcome',
       variables: { name: 'Trial', credits: 300 },
       channels: ['whatsapp', 'sms', 'email'],
-      instance_id: 'inst-1',
+      instanceId: 'inst-1',
       from: 'noreply@example.com',
     });
 
@@ -278,44 +322,41 @@ describe('Node.js SDK — Messages (template)', () => {
       template: 'welcome',
       variables: { name: 'Trial', credits: 300 },
       channels: ['whatsapp', 'sms', 'email'],
-      instance_id: 'inst-1',
+      instanceId: 'inst-1',
       from: 'noreply@example.com',
     });
     expect(result.success).toBe(true);
     expect(result.data.status).toBe('queued');
     expect(result.data.count).toBe(3);
-    expect(result.data.message_ids).toEqual(['msg-1']);
-    expect(result.data.sms_ids).toEqual(['sms-1']);
-    expect(result.data.email_ids).toEqual(['em-1']);
+    expect(result.data.messageIds).toEqual(['msg-1']);
+    expect(result.data.smsIds).toEqual(['sms-1']);
+    expect(result.data.emailIds).toEqual(['em-1']);
   });
 });
 
 describe('Node.js SDK — SMS', () => {
-  let zenvio: Zenvio;
+  let notifique: Notifique;
   let mockPost: jest.Mock;
   let mockGet: jest.Mock;
 
   beforeEach(() => {
     mockPost = jest.fn();
     mockGet = jest.fn();
-    (mockedAxios.create as jest.Mock).mockReturnValue({
-      post: mockPost,
-      get: mockGet,
-      delete: jest.fn(),
-      patch: jest.fn(),
-    });
-    zenvio = new Zenvio({ apiKey: 'test-key' });
+    (mockedAxios.create as jest.Mock).mockReturnValue(
+      createMockClient({ post: mockPost, get: mockGet, delete: jest.fn(), patch: jest.fn() })
+    );
+    notifique = new Notifique({ apiKey: 'test-key' });
   });
 
   it('sms.send calls POST /sms/messages with to, message, schedule?, options?', async () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { status: 'queued', count: 1, sms_ids: ['sms-1'] },
+        data: { status: 'QUEUED', count: 1, smsIds: ['sms-1'] },
       },
     });
 
-    const result = await zenvio.sms.send({
+    const result = await notifique.sms.send({
       to: ['5511999999999'],
       message: 'Olá!',
     });
@@ -323,10 +364,10 @@ describe('Node.js SDK — SMS', () => {
     expect(mockPost).toHaveBeenCalledWith('/sms/messages', {
       to: ['5511999999999'],
       message: 'Olá!',
-    });
+    }, undefined);
     expect(result.success).toBe(true);
-    expect(result.data.sms_ids).toEqual(['sms-1']);
-    expect(result.data.status).toBe('queued');
+    expect(result.data.smsIds).toEqual(['sms-1']);
+    expect(result.data.status).toBe('QUEUED');
   });
 
   it('sms.get calls GET /sms/messages/:id', async () => {
@@ -334,12 +375,10 @@ describe('Node.js SDK — SMS', () => {
       data: {
         success: true,
         data: {
-          sms_id: 'sms-1',
+          smsId: 'sms-1',
           to: '5511999999999',
           message: 'Hi',
           status: 'DELIVERED',
-          provider: null,
-          external_id: null,
           sent_at: '2025-01-01T12:00:00.000Z',
           delivered_at: '2025-01-01T12:00:05.000Z',
           failed_at: null,
@@ -350,10 +389,10 @@ describe('Node.js SDK — SMS', () => {
       },
     });
 
-    const result = await zenvio.sms.get('sms-1');
+    const result = await notifique.sms.get('sms-1');
 
     expect(mockGet).toHaveBeenCalledWith('/sms/messages/sms-1');
-    expect(result.data.sms_id).toBe('sms-1');
+    expect(result.data.smsId).toBe('sms-1');
     expect(result.data.status).toBe('DELIVERED');
   });
 
@@ -361,45 +400,42 @@ describe('Node.js SDK — SMS', () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { sms_id: 'sms-1', status: 'cancelled' },
+        data: { smsId: 'sms-1', status: 'CANCELLED' },
       },
     });
 
-    const result = await zenvio.sms.cancel('sms-1');
+    const result = await notifique.sms.cancel('sms-1');
 
     expect(mockPost).toHaveBeenCalledWith('/sms/messages/sms-1/cancel');
     expect(result.success).toBe(true);
-    expect(result.data.sms_id).toBe('sms-1');
-    expect(result.data.status).toBe('cancelled');
+    expect(result.data.smsId).toBe('sms-1');
+    expect(result.data.status).toBe('CANCELLED');
   });
 });
 
 describe('Node.js SDK — Email', () => {
-  let zenvio: Zenvio;
+  let notifique: Notifique;
   let mockPost: jest.Mock;
   let mockGet: jest.Mock;
 
   beforeEach(() => {
     mockPost = jest.fn();
     mockGet = jest.fn();
-    (mockedAxios.create as jest.Mock).mockReturnValue({
-      post: mockPost,
-      get: mockGet,
-      delete: jest.fn(),
-      patch: jest.fn(),
-    });
-    zenvio = new Zenvio({ apiKey: 'test-key' });
+    (mockedAxios.create as jest.Mock).mockReturnValue(
+      createMockClient({ post: mockPost, get: mockGet, delete: jest.fn(), patch: jest.fn() })
+    );
+    notifique = new Notifique({ apiKey: 'test-key' });
   });
 
   it('email.send calls POST /email/messages with from, to, subject, text/html', async () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { email_ids: ['em-1'], status: 'queued', count: 1 },
+        data: { emailIds: ['em-1'], status: 'QUEUED', count: 1 },
       },
     });
 
-    const result = await zenvio.email.send({
+    const result = await notifique.email.send({
       from: 'noreply@example.com',
       to: ['user@example.com'],
       subject: 'Test',
@@ -411,9 +447,9 @@ describe('Node.js SDK — Email', () => {
       to: ['user@example.com'],
       subject: 'Test',
       html: '<p>Hello</p>',
-    });
-    expect(result.data.email_ids).toEqual(['em-1']);
-    expect(result.data.status).toBe('queued');
+    }, undefined);
+    expect(result.data.emailIds).toEqual(['em-1']);
+    expect(result.data.status).toBe('QUEUED');
   });
 
   it('email.get calls GET /email/messages/:id', async () => {
@@ -427,7 +463,6 @@ describe('Node.js SDK — Email', () => {
           fromName: null,
           subject: 'Test',
           status: 'SENT',
-          externalId: null,
           scheduledFor: null,
           sentAt: '2025-01-01T12:00:00.000Z',
           deliveredAt: null,
@@ -438,7 +473,7 @@ describe('Node.js SDK — Email', () => {
       },
     });
 
-    const result = await zenvio.email.get('em-1');
+    const result = await notifique.email.get('em-1');
 
     expect(mockGet).toHaveBeenCalledWith('/email/messages/em-1');
     expect(result.data.id).toBe('em-1');
@@ -449,13 +484,281 @@ describe('Node.js SDK — Email', () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { email_id: 'em-1', status: 'cancelled' },
+        data: { email_id: 'em-1', status: 'CANCELLED' },
       },
     });
 
-    const result = await zenvio.email.cancel('em-1');
+    const result = await notifique.email.cancel('em-1');
 
     expect(mockPost).toHaveBeenCalledWith('/email/messages/em-1/cancel');
-    expect(result.data.status).toBe('cancelled');
+    expect(result.data.status).toBe('CANCELLED');
+  });
+
+  it('email.domains.list calls GET /email/domains', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: [
+          { id: 'dom-1', domain: 'example.com', status: 'VERIFIED', dnsRecords: [], verifiedAt: '2025-01-01T00:00:00.000Z', createdAt: '2025-01-01T00:00:00.000Z' },
+        ],
+      },
+    });
+
+    const result = await notifique.email.domains.list();
+
+    expect(mockGet).toHaveBeenCalledWith('/email/domains');
+    expect(result.success).toBe(true);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].domain).toBe('example.com');
+    expect(result.data[0].status).toBe('VERIFIED');
+  });
+
+  it('email.domains.create calls POST /email/domains', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'dom-1', domain: 'new.com', status: 'PENDING', dnsRecords: [], verifiedAt: null, createdAt: '2025-01-01T00:00:00.000Z' },
+        message: 'Add the DNS record(s) above.',
+      },
+    });
+
+    const result = await notifique.email.domains.create({ domain: 'new.com' });
+
+    expect(mockPost).toHaveBeenCalledWith('/email/domains', { domain: 'new.com' });
+    expect(result.data.domain).toBe('new.com');
+    expect(result.data.status).toBe('PENDING');
+  });
+
+  it('email.domains.get calls GET /email/domains/:id', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'dom-1', domain: 'example.com', status: 'VERIFIED', dnsRecords: [], verifiedAt: '2025-01-01T00:00:00.000Z', createdAt: '2025-01-01T00:00:00.000Z', updatedAt: '2025-01-01T00:00:00.000Z' },
+      },
+    });
+
+    const result = await notifique.email.domains.get('dom-1');
+
+    expect(mockGet).toHaveBeenCalledWith('/email/domains/dom-1');
+    expect(result.data.id).toBe('dom-1');
+  });
+
+  it('email.domains.verify calls POST /email/domains/:id/verify', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'dom-1', domain: 'example.com', status: 'VERIFIED', dnsRecords: [], verifiedAt: '2025-01-01T00:00:00.000Z', createdAt: '2025-01-01T00:00:00.000Z' },
+        verified: true,
+      },
+    });
+
+    const result = await notifique.email.domains.verify('dom-1');
+
+    expect(mockPost).toHaveBeenCalledWith('/email/domains/dom-1/verify');
+    expect(result.verified).toBe(true);
+    expect(result.data.status).toBe('VERIFIED');
+  });
+});
+
+describe('Node.js SDK — Push', () => {
+  let notifique: Notifique;
+  let mockPost: jest.Mock;
+  let mockGet: jest.Mock;
+  let mockPut: jest.Mock;
+  let mockDelete: jest.Mock;
+
+  beforeEach(() => {
+    mockPost = jest.fn();
+    mockGet = jest.fn();
+    mockPut = jest.fn();
+    mockDelete = jest.fn();
+    (mockedAxios.create as jest.Mock).mockReturnValue(
+      createMockClient({ post: mockPost, get: mockGet, put: mockPut, delete: mockDelete, patch: jest.fn() })
+    );
+    notifique = new Notifique({ apiKey: 'test-key' });
+  });
+
+  it('push.apps.list calls GET /push/apps with page, limit', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: [{ id: 'app-1', name: 'My App', workspace_id: 'ws-1', vapid_public_key: null, has_vapid_private: false, has_fcm: false, has_apns: false, allowed_origins: [], prompt_config: null, created_at: '2025-01-01T00:00:00.000Z', updated_at: '2025-01-01T00:00:00.000Z' }],
+        pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
+      },
+    });
+
+    const result = await notifique.push.apps.list({ page: 1, limit: 20 });
+
+    expect(mockGet).toHaveBeenCalledWith('/push/apps', { params: { page: 1, limit: 20 } });
+    expect(result.data[0].id).toBe('app-1');
+  });
+
+  it('push.apps.get calls GET /push/apps/:id', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'app-1', name: 'App', workspace_id: 'ws-1', vapid_public_key: 'key', has_vapid_private: true, has_fcm: false, has_apns: false, allowed_origins: [], prompt_config: null, created_at: '', updated_at: '' },
+      },
+    });
+
+    const result = await notifique.push.apps.get('app-1');
+
+    expect(mockGet).toHaveBeenCalledWith('/push/apps/app-1');
+    expect(result.data.id).toBe('app-1');
+  });
+
+  it('push.apps.create calls POST /push/apps', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'app-new', name: 'New App', workspace_id: 'ws-1', vapid_public_key: null, has_vapid_private: false, has_fcm: false, has_apns: false, allowed_origins: [], prompt_config: null, created_at: '', updated_at: '' },
+      },
+    });
+
+    const result = await notifique.push.apps.create({ name: 'New App' });
+
+    expect(mockPost).toHaveBeenCalledWith('/push/apps', { name: 'New App' });
+    expect(result.data.name).toBe('New App');
+  });
+
+  it('push.apps.update calls PUT /push/apps/:id', async () => {
+    mockPut.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'app-1', name: 'Updated', workspace_id: 'ws-1', vapid_public_key: null, has_vapid_private: false, has_fcm: false, has_apns: false, allowed_origins: [], prompt_config: null, created_at: '', updated_at: '' },
+      },
+    });
+
+    const result = await notifique.push.apps.update('app-1', { name: 'Updated' });
+
+    expect(mockPut).toHaveBeenCalledWith('/push/apps/app-1', { name: 'Updated' });
+    expect(result.data.name).toBe('Updated');
+  });
+
+  it('push.apps.delete calls DELETE /push/apps/:id', async () => {
+    mockDelete.mockResolvedValueOnce({ data: { success: true } });
+
+    const result = await notifique.push.apps.delete('app-1');
+
+    expect(mockDelete).toHaveBeenCalledWith('/push/apps/app-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('push.devices.register calls POST /push/devices', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'dev-1', app_id: 'app-1', platform: 'web', external_user_id: null, created_at: '2025-01-01T00:00:00.000Z' },
+      },
+    });
+
+    const result = await notifique.push.devices.register({
+      appId: 'app-1',
+      platform: 'web',
+      subscription: { endpoint: 'https://...', keys: { p256dh: 'x', auth: 'y' } },
+    });
+
+    expect(mockPost).toHaveBeenCalledWith('/push/devices', expect.objectContaining({ appId: 'app-1', platform: 'web' }));
+    expect(result.data.id).toBe('dev-1');
+  });
+
+  it('push.devices.list calls GET /push/devices with params', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: [{ id: 'dev-1', app_id: 'app-1', platform: 'web', external_user_id: null, created_at: '' }],
+        pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
+      },
+    });
+
+    const result = await notifique.push.devices.list({ appId: 'app-1', platform: 'web' });
+
+    expect(mockGet).toHaveBeenCalledWith('/push/devices', { params: { appId: 'app-1', platform: 'web' } });
+    expect(result.data).toHaveLength(1);
+  });
+
+  it('push.devices.get calls GET /push/devices/:id', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'dev-1', app_id: 'app-1', platform: 'web', external_user_id: null, created_at: '' },
+      },
+    });
+
+    const result = await notifique.push.devices.get('dev-1');
+
+    expect(mockGet).toHaveBeenCalledWith('/push/devices/dev-1');
+    expect(result.data.id).toBe('dev-1');
+  });
+
+  it('push.devices.delete calls DELETE /push/devices/:id', async () => {
+    mockDelete.mockResolvedValueOnce({ data: { success: true } });
+
+    const result = await notifique.push.devices.delete('dev-1');
+
+    expect(mockDelete).toHaveBeenCalledWith('/push/devices/dev-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('push.messages.send calls POST /push/messages', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { status: 'QUEUED', count: 1, pushIds: ['push-1'] },
+      },
+    });
+
+    const result = await notifique.push.messages.send({
+      to: ['dev-1'],
+      title: 'Hi',
+      body: 'Body',
+    });
+
+    expect(mockPost).toHaveBeenCalledWith('/push/messages', expect.objectContaining({ to: ['dev-1'], title: 'Hi', body: 'Body' }), undefined);
+    expect(result.data.status).toBe('QUEUED');
+    expect(result.data.pushIds).toEqual(['push-1']);
+  });
+
+  it('push.messages.list calls GET /push/messages with params', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: [{ id: 'push-1', device_id: 'dev-1', app_id: 'app-1', title: 'T', body: 'B', status: 'SENT', scheduled_for: null, sent_at: '', delivered_at: null, failed_at: null, error_message: null, clicked_at: null, created_at: '' }],
+        pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
+      },
+    });
+
+    const result = await notifique.push.messages.list({ status: 'SENT', appId: 'app-1' });
+
+    expect(mockGet).toHaveBeenCalledWith('/push/messages', { params: { status: 'SENT', appId: 'app-1' } });
+    expect(result.data).toHaveLength(1);
+  });
+
+  it('push.messages.get calls GET /push/messages/:id', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { id: 'push-1', device_id: 'dev-1', app_id: 'app-1', title: 'T', body: 'B', status: 'DELIVERED', scheduled_for: null, sent_at: '', delivered_at: '', failed_at: null, error_message: null, clicked_at: null, created_at: '' },
+      },
+    });
+
+    const result = await notifique.push.messages.get('push-1');
+
+    expect(mockGet).toHaveBeenCalledWith('/push/messages/push-1');
+    expect(result.data.status).toBe('DELIVERED');
+  });
+
+  it('push.messages.cancel calls POST /push/messages/:id/cancel', async () => {
+    mockPost.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: { push_id: 'push-1', status: 'CANCELLED' },
+      },
+    });
+
+    const result = await notifique.push.messages.cancel('push-1');
+
+    expect(mockPost).toHaveBeenCalledWith('/push/messages/push-1/cancel');
+    expect(result.data.status).toBe('CANCELLED');
   });
 });

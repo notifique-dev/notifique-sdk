@@ -1,9 +1,9 @@
-defmodule ZenvioExample.MixProject do
+defmodule NotifiqueExample.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :zenvio_example,
+      app: :notifique_example,
       version: "0.1.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
@@ -13,7 +13,7 @@ defmodule ZenvioExample.MixProject do
 
   defp deps do
     [
-      {:zenvio, "~> 0.1.0"}
+      {:notifique, path: "../../packages/sdk-elixir"}
     ]
   end
 end

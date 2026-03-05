@@ -1,7 +1,7 @@
 {
-    "name": "@zenvio/sdk-node",
+    "name": "@notifique/sdk-node",
     "version": "0.1.0",
-    "description": "Zenvio SDK for Node.js",
+    "description": "Notifique SDK for Node.js",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -9,11 +9,11 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@zenvio/core": "*",
+        "@notifique/core": "*",
         "axios": "^1.6.0"
     },
     "devDependencies": {
-        "typescript": "^5.0.0",
-        "@types/node": "^20.0.0"
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
     }
 }

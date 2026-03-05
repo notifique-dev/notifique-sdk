@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "zenvio-sdk"
+name = "notifique-sdk"
 version = "0.1.0"
-description = "Official Zenvio SDK for Python"
+description = "SDK oficial Notifique para Python"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Zenvio", email = "support@zenvio.com"}
+    {name = "Notifique", email = "suporte@notifique.dev"}
 ]
 dependencies = [
     "requests>=2.31.0",

@@ -1,23 +1,9 @@
-# Zenvio .NET SDK — Usage Example
+# Notifique .NET SDK — Exemplo de uso
 
-## Prerequisites
+Exemplo de uso do SDK Notifique para .NET (WhatsApp, SMS, Email, Messages).
 
-- .NET 8.0 SDK
-
-## Running
+Configure as variáveis de ambiente `NOTIFIQUE_API_KEY` e `NOTIFIQUE_INSTANCE_ID` (ou edite no código) e execute:
 
 ```bash
-export ZENVIO_API_KEY="your-api-key"
-export ZENVIO_INSTANCE_ID="your-instance-id"
-
-dotnet run --project dotnet-usage.csproj
+dotnet run
 ```
-
-## What it does
-
-This example demonstrates:
-
-1. **WhatsApp** — Sending text and image messages
-2. **SMS** — Sending an SMS
-3. **Email** — Sending an HTML email
-4. **Templates** — Sending a multi-channel template message

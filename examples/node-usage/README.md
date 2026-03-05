@@ -1,11 +1,11 @@
-# Zenvio Node.js SDK Example
+# Notifique Node.js SDK Example
 
-This project demonstrates how to use the official Zenvio Node.js SDK to send various types of WhatsApp messages.
+This project demonstrates how to use the official Notifique Node.js SDK to send various types of WhatsApp messages.
 
 ## Prerequisites
 
 - Node.js installed.
-- A Zenvio API Key and a WhatsApp Instance ID (phoneId).
+- A Notifique API Key and a WhatsApp Instance ID (phoneId).
 
 ## Setup
 
@@ -24,7 +24,7 @@ This project demonstrates how to use the official Zenvio Node.js SDK to send var
 
 3. **Configure the Example**:
    Open `src/index.ts` and replace the placeholder values:
-   - `apiKey`: Your Zenvio API Key.
+   - `apiKey`: Your Notifique API Key.
    - `phoneId`: The ID of the instance you want to send from.
    - `to`: The recipient phone number(s).
 

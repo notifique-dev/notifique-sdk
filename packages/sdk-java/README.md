@@ -1,65 +1,68 @@
-# Zenvio Java SDK
+# Notifique Java SDK
 
-Official Zenvio SDK for Java.
+SDK oficial Notifique para Java — WhatsApp, SMS, Email, Push e envio por template.
 
-## Installation
+## Instalação
 
 ### Maven
-Add this dependency to your `pom.xml`:
-
 ```xml
 <dependency>
-    <groupId>com.zenvio</groupId>
-    <artifactId>zenvio-sdk</artifactId>
+    <groupId>com.notifique</groupId>
+    <artifactId>notifique-sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
 ```
 
 ### Gradle
-Add this to your `build.gradle`:
-
 ```gradle
-implementation 'com.zenvio:zenvio-sdk:0.1.0'
+implementation 'com.notifique:notifique-sdk:0.1.0'
 ```
 
-## Quick Start
+## Uso
 
 ```java
-import com.zenvio.sdk.Zenvio;
-import com.zenvio.sdk.model.SendResponse;
+import com.notifique.sdk.Notifique;
+import com.notifique.sdk.model.*;
 
-public class Main {
-    public static void main(String[] args) {
-        // Initialize the client
-        Zenvio zenvio = new Zenvio("your-api-key");
+Notifique notifique = new Notifique("sua-api-key");
+// baseUrl padrão: https://api.notifique.dev/v1
 
-        String phoneId = "your-phone-id";
+// WhatsApp — envelope getData() para send/sendText e getMessage()
+WhatsAppSendEnvelope sendRes = notifique.whatsapp.sendText("instance-id", "5511999999999", "Olá!");
+sendRes.getData().getMessageIds();
 
-        // 1. Simple text message
-        SendResponse response = zenvio.whatsapp.sendText(phoneId, "5511999999999", "Hello from Java!");
-        System.out.println("Success: " + response.isSuccess());
-    }
-}
+WhatsAppMessageEnvelope msg = notifique.whatsapp.getMessage("message-id");
+msg.getData().getStatus();
+
+notifique.whatsapp.listMessages();
+notifique.whatsapp.getInstanceQr("instance-id");
+notifique.whatsapp.listInstances();
+notifique.whatsapp.createInstance("Nome");
+
+// SMS
+notifique.sms.send(new SmsSendParams(List.of("5511999999999"), "SMS de teste"));
+notifique.sms.get("sms-id");
+notifique.sms.cancel("sms-id");
+
+// Email
+notifique.email.send(params);
+notifique.email.get("email-id");
+notifique.email.cancel("email-id");
+notifique.email.domains().list();
+notifique.email.domains().create("seudominio.com");
+notifique.email.domains().verify("domain-id");
+
+// Push
+notifique.push.apps.list();
+notifique.push.apps.create("Meu App");
+notifique.push.devices.register(deviceParams);
+notifique.push.messages.send(pushParams);
+
+// Templates
+notifique.messages.send(messagesParams);
 ```
 
-## Advanced Usage
+## Compatibilidade
 
-```java
-import com.zenvio.sdk.model.Payloads;
-import com.zenvio.sdk.model.SendParams;
-
-// Sending a Template
-SendParams params = new SendParams();
-params.setTo(List.of("5511999999999"));
-params.setType("template");
-
-Payloads.Template payload = new Payloads.Template("order_update", "en_US");
-payload.setVariables(List.of("John", "Shipped"));
-params.setPayload(payload);
-
-SendResponse res = zenvio.whatsapp.send(phoneId, params);
-```
-
-## Requirements
-- Java 11 or higher.
+- Java 11+.
 - Jackson Databind.

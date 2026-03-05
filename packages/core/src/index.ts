@@ -1,4 +1,30 @@
 /* =====================================================
+   API Error — erros da API retornados pelo SDK em formato legível
+   ===================================================== */
+
+export class NotifiqueApiError extends Error {
+  /** HTTP status (ex: 401, 404). */
+  readonly statusCode: number;
+  /** Código de erro (ex: ERR_BAD_REQUEST). */
+  readonly code?: string;
+  /** Corpo da resposta quando disponível. */
+  readonly responseData?: unknown;
+
+  constructor(
+    message: string,
+    statusCode: number,
+    opts?: { code?: string; responseData?: unknown }
+  ) {
+    super(message);
+    this.name = 'NotifiqueApiError';
+    this.statusCode = statusCode;
+    this.code = opts?.code;
+    this.responseData = opts?.responseData;
+    Object.setPrototypeOf(this, NotifiqueApiError.prototype);
+  }
+}
+
+/* =====================================================
    WhatsApp API — Message types (match API exactly)
    ===================================================== */
 
@@ -20,11 +46,13 @@ export interface TextPayload {
 }
 
 export interface MediaPayload {
-  media_url: string;
+  mediaUrl: string;
   /** Nome do arquivo (obrigatório). */
-  file_name: string;
+  fileName: string;
   /** Mimetype (obrigatório), ex: application/pdf, image/png. */
   mimetype: string;
+  /** Legenda opcional para image, video, audio ou document (OpenAPI). */
+  caption?: string;
 }
 
 export interface LocationPayload {
@@ -48,10 +76,10 @@ export interface ContactPayload {
   url?: string;
 }
 
-/** Payload para type=contact: objeto contact ou contact_id do workspace. */
+/** Payload para type=contact: objeto contact ou contactId do workspace. */
 export type ContactMessagePayload =
   | { contact: ContactPayload }
-  | { contact_id: string };
+  | { contactId: string };
 
 export type WhatsAppPayloadByType = {
   text: TextPayload;
@@ -69,7 +97,7 @@ export type WhatsAppPayloadByType = {
 
 export interface WhatsAppSendParams<T extends WhatsAppMessageType = WhatsAppMessageType> {
   /** Instance ID (WhatsApp connection). */
-  instance_id: string;
+  instanceId: string;
   /** Recipients E.164 (1–100). One message per number. */
   to: string[];
   type: T;
@@ -87,39 +115,43 @@ export interface WhatsAppSendParams<T extends WhatsAppMessageType = WhatsAppMess
    Send response (202)
    ===================================================== */
 
+/** Resposta de POST /v1/whatsapp/messages (202). Status em MAIÚSCULO conforme OpenAPI. */
 export interface WhatsAppSendResponse {
-  message_ids: string[];
-  status: 'queued' | 'scheduled';
-  scheduled_at?: string; // ISO 8601 when scheduled
+  messageIds: string[];
+  status: 'QUEUED' | 'SCHEDULED';
+  scheduledAt?: string | null;
 }
 
 /* =====================================================
    Message status (GET /v1/whatsapp/messages/:messageId)
    ===================================================== */
 
+/** Dados de status da mensagem WhatsApp (camelCase). */
 export interface WhatsAppMessageStatus {
-  message_id: string;
+  messageId: string;
   to: string;
   type: string;
   status: string;
-  scheduled_at: string | null;
-  sent_at: string | null;
-  delivered_at: string | null;
-  read_at: string | null;
-  failed_at: string | null;
-  error_message: string | null;
-  external_id: string | null;
-  created_at: string;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  deliveredAt: string | null;
+  readAt: string | null;
+  failedAt: string | null;
+  errorMessage: string | null;
+  createdAt: string;
 }
 
 /* =====================================================
-   Message actions (delete, edit, cancel)
+   Message actions (delete, edit, cancel) — OpenAPI MessageActionResponse
+   Resposta: envelope { success, data: { message_id, status } }
    ===================================================== */
 
 export interface WhatsAppMessageActionResponse {
   success: boolean;
-  message_ids: string[];
-  status: 'deleted' | 'edited' | 'cancelled';
+  data: {
+    messageId: string;
+    status: 'CANCELLED' | 'DELETED' | 'EDITED';
+  };
 }
 
 /* =====================================================
@@ -161,23 +193,71 @@ export interface WhatsAppCreateInstanceResponse {
   success: boolean;
   data: {
     instance: Pick<WhatsAppInstance, 'id' | 'name' | 'status' | 'phoneNumber' | 'createdAt'>;
-    evolution: Record<string, unknown>; // QR / pairingCode / status
+    connection: Record<string, unknown>; // QR base64 / code / pairingCode / count
   };
 }
 
 export interface WhatsAppInstanceActionResponse {
   success: boolean;
-  data: { instance_id: string; status: string };
+  data: { instanceId: string; status: string };
   message?: string;
+}
+
+/** Params for GET /v1/whatsapp/messages (list messages). */
+export interface WhatsAppListMessagesParams {
+  page?: string;
+  limit?: string;
+  fromDate?: string;
+  toDate?: string;
+  instanceIds?: string;
+  status?: string;
+  type?: string;
+  includeEvents?: string;
+}
+
+export interface WhatsAppListMessagesResponse {
+  success: boolean;
+  data: Record<string, unknown>[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+/** Response for GET /v1/whatsapp/instances/:instanceId/qr. */
+export interface WhatsAppInstanceQrResponse {
+  success: boolean;
+  data: {
+    status: string;
+    base64: string | null;
+  };
 }
 
 /* =====================================================
    Config & legacy aliases (for backwards compat)
    ===================================================== */
 
-export interface ZenvioConfig {
+export interface NotifiqueConfig {
   apiKey: string;
   baseUrl?: string;
+}
+
+/** Opções para requisições de envio. IdempotencyKey envia o header Idempotency-Key (e x-idempotency-key) conforme OpenAPI (email, sms, push, whatsapp). */
+export interface SendOptions {
+  /** Chave única para evitar envio duplicado (header Idempotency-Key / x-idempotency-key). */
+  idempotencyKey?: string;
+}
+
+/** OpenAPI ErrorResponse — 4xx/5xx; usado quando a API retorna success: false. */
+export interface ErrorResponse {
+  success: false;
+  error?: string;
+  message?: string;
+  code?: string;
+  details?: Array<{ field?: string; message?: string }>;
+  data?: Record<string, unknown>;
 }
 
 /** @deprecated Use WhatsAppMessageType */
@@ -189,10 +269,10 @@ export type SendParams<T extends WhatsAppMessageType = WhatsAppMessageType> = Wh
 /** @deprecated Use WhatsAppSendResponse */
 export interface SendResponse {
   success?: boolean;
-  message_ids?: string[];
+  messageIds?: string[];
   messageId?: string;
   status?: string;
-  scheduled_at?: string;
+  scheduledAt?: string;
   error?: string;
 }
 
@@ -213,29 +293,29 @@ export interface SmsSendParams {
   };
 }
 
+/** Resposta de envio SMS (202). Padrão: status MAIÚSCULO, demais campos camelCase. */
 export interface SmsSendResponse {
   success: boolean;
   data: {
-    status: 'queued' | 'scheduled';
+    status: 'QUEUED' | 'SCHEDULED';
     count: number;
-    sms_ids: string[];
-    scheduled_at?: string; // ISO 8601 quando agendado
+    smsIds: string[];
+    scheduledAt?: string;
   };
 }
 
+/** Dados de status de SMS (camelCase). */
 export interface SmsStatus {
-  sms_id: string;
+  smsId: string;
   to: string;
   message: string;
-  status: 'SCHEDULED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'FAILED';
-  provider: string | null;
-  external_id: string | null;
-  sent_at: string | null;
-  delivered_at: string | null;
-  failed_at: string | null;
-  scheduled_for: string | null;
-  error_message: string | null;
-  created_at: string;
+  status: 'SCHEDULED' | 'QUEUED' | 'SENT' | 'PROCESSING' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
+  sentAt: string | null;
+  deliveredAt: string | null;
+  failedAt: string | null;
+  scheduledFor: string | null;
+  errorMessage: string | null;
+  createdAt: string;
 }
 
 export interface SmsStatusResponse {
@@ -243,11 +323,12 @@ export interface SmsStatusResponse {
   data: SmsStatus;
 }
 
+/** Resposta de cancelamento SMS (camelCase). */
 export interface SmsCancelResponse {
   success: boolean;
   data: {
-    sms_id: string;
-    status: 'cancelled';
+    smsId: string;
+    status: 'CANCELLED';
   };
 }
 
@@ -273,13 +354,14 @@ export interface EmailSendParams {
   };
 }
 
+/** Resposta de envio e-mail (202). Padrão: status MAIÚSCULO, demais camelCase. */
 export interface EmailSendResponse {
   success: boolean;
   data: {
-    email_ids: string[];
-    status: 'queued' | 'scheduled';
+    emailIds: string[];
+    status: 'QUEUED' | 'SCHEDULED';
     count: number;
-    scheduled_at?: string; // ISO 8601 quando agendado
+    scheduledAt?: string;
   };
 }
 
@@ -290,7 +372,6 @@ export interface EmailStatus {
   fromName: string | null;
   subject: string;
   status: 'SCHEDULED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
-  externalId: string | null;
   scheduledFor: string | null;
   sentAt: string | null;
   deliveredAt: string | null;
@@ -304,12 +385,53 @@ export interface EmailStatusResponse {
   data: EmailStatus;
 }
 
+/** Resposta de cancelamento e-mail (camelCase). */
 export interface EmailCancelResponse {
   success: boolean;
   data: {
-    email_id: string;
-    status: 'cancelled';
+    emailId: string;
+    status: 'CANCELLED';
   };
+}
+
+/* =====================================================
+   Email Domains (GET/POST /v1/email/domains, GET /v1/email/domains/:id, POST /v1/email/domains/:id/verify)
+   ===================================================== */
+
+export interface EmailDomainItem {
+  id: string;
+  domain: string;
+  status: 'PENDING' | 'VERIFIED' | 'FAILED';
+  dnsRecords?: { type: string; name: string; value: string }[];
+  verifiedAt: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ListEmailDomainsResponse {
+  success: boolean;
+  data: EmailDomainItem[];
+}
+
+export interface CreateEmailDomainRequest {
+  domain: string;
+}
+
+export interface CreateEmailDomainResponse {
+  success: boolean;
+  data: EmailDomainItem;
+  message?: string;
+}
+
+export interface GetEmailDomainResponse {
+  success: boolean;
+  data: EmailDomainItem;
+}
+
+export interface VerifyEmailDomainResponse {
+  success: boolean;
+  data: EmailDomainItem;
+  verified: boolean;
 }
 
 /* =====================================================
@@ -319,7 +441,7 @@ export interface EmailCancelResponse {
 
 export type TemplateChannel = 'whatsapp' | 'sms' | 'email';
 
-/** Parâmetros iguais em todos os SDKs: to, template, variables?, channels, instance_id?, from?, fromName? */
+/** Parâmetros iguais em todos os SDKs: to, template, variables?, channels, instanceId?, from?, fromName? */
 export interface MessagesSendParams {
   /** Destinatários: números E.164 (WhatsApp/SMS) e/ou e-mails (Email). Máx. 100. */
   to: string[];
@@ -330,7 +452,7 @@ export interface MessagesSendParams {
   /** Canais para envio: whatsapp (números), sms (números), email (e-mails). */
   channels: TemplateChannel[];
   /** Obrigatório se channels incluir 'whatsapp'. ID da instância WhatsApp. */
-  instance_id?: string;
+  instanceId?: string;
   /** Obrigatório se channels incluir 'email'. Remetente (domínio verificado). */
   from?: string;
   /** Nome do remetente (opcional, para email). */
@@ -341,13 +463,176 @@ export interface MessagesSendResponse {
   success: boolean;
   data: {
     /** IDs das mensagens WhatsApp (se canal whatsapp). */
-    message_ids?: string[];
+    messageIds?: string[];
     /** IDs dos SMS (se canal sms). */
-    sms_ids?: string[];
+    smsIds?: string[];
     /** IDs dos e-mails (se canal email). */
-    email_ids?: string[];
+    emailIds?: string[];
     status: 'queued';
     /** Total de envios (mensagens + SMS + e-mails). */
     count: number;
   };
+}
+
+/* =====================================================
+   Push API — Apps, Devices, Messages
+   ===================================================== */
+
+export interface PushAppCreateRequest {
+  name: string;
+}
+
+export interface PushAppUpdateRequest {
+  name?: string;
+  vapid_public_key?: string;
+  vapid_private_key?: string;
+  allowed_origins?: string[];
+  prompt_config?: Record<string, unknown>;
+  fcm_project_id?: string;
+  fcm_service_account_json?: string;
+  apns_key_id?: string;
+  apns_team_id?: string;
+  apns_bundle_id?: string;
+  apns_key_p8?: string;
+}
+
+export interface PushAppItem {
+  id: string;
+  name: string;
+  workspaceId: string;
+  vapidPublicKey: string | null;
+  hasVapidPrivate: boolean;
+  hasFcm: boolean;
+  hasApns: boolean;
+  allowedOrigins: string[];
+  promptConfig: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Params for GET /v1/push/apps — OpenAPI page (default 1), limit (default 20, max 100). */
+export interface PushAppListParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PushAppListResponse {
+  success: boolean;
+  data: PushAppItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface PushAppSingleResponse {
+  success: boolean;
+  data: PushAppItem;
+}
+
+export interface PushDeviceRegisterRequest {
+  appId: string;
+  platform: 'web' | 'android' | 'ios';
+  subscription?: {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+  };
+  token?: string;
+  externalUserId?: string;
+}
+
+export interface PushDeviceItem {
+  id: string;
+  appId: string;
+  platform: string;
+  externalUserId: string | null;
+  createdAt: string;
+}
+
+/** Params for GET /v1/push/devices (camelCase). */
+export interface PushDeviceListParams {
+  page?: number;
+  limit?: number;
+  appId?: string;
+  platform?: 'web' | 'android' | 'ios';
+}
+
+export interface PushDeviceListResponse {
+  success: boolean;
+  data: PushDeviceItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface PushDeviceSingleResponse {
+  success: boolean;
+  data: PushDeviceItem;
+}
+
+export interface SendPushParams {
+  to: string[];
+  title?: string;
+  body?: string;
+  url?: string;
+  icon?: string;
+  image?: string;
+  data?: Record<string, unknown>;
+  schedule?: { sendAt: string };
+  options?: { priority?: 'high' | 'normal' | 'low' };
+}
+
+export interface SendPushResponse {
+  success: boolean;
+  data: {
+    status: 'QUEUED' | 'SCHEDULED';
+    count: number;
+    pushIds: string[];
+    scheduledAt?: string;
+  };
+}
+
+/** Status do envio push — OpenAPI GET /v1/push/messages (query). */
+export type PushMessageStatus =
+  | 'QUEUED'
+  | 'SCHEDULED'
+  | 'SENT'
+  | 'DELIVERED'
+  | 'CLICKED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+/** Params for GET /v1/push/messages (camelCase). */
+export interface PushMessageListParams {
+  page?: number;
+  limit?: number;
+  status?: PushMessageStatus;
+  appId?: string;
+}
+
+export interface PushMessageItem {
+  id: string;
+  deviceId: string;
+  appId: string;
+  title: string;
+  body: string;
+  status: string;
+  scheduledFor: string | null;
+  sentAt: string | null;
+  deliveredAt: string | null;
+  failedAt: string | null;
+  errorMessage: string | null;
+  clickedAt: string | null;
+  createdAt: string;
+}
+
+export interface PushMessageListResponse {
+  success: boolean;
+  data: PushMessageItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface PushMessageSingleResponse {
+  success: boolean;
+  data: PushMessageItem;
+}
+
+export interface CancelPushResponse {
+  success: boolean;
+  data: { pushId: string; status: 'CANCELLED' };
 }

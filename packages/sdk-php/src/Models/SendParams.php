@@ -1,6 +1,6 @@
 <?php
 
-namespace Zenvio\Models;
+namespace Notifique\Models;
 
 class SendParams
 {

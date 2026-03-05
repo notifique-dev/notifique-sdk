@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Notifique</RootNamespace>
+    <PackageId>Notifique</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Notifique</Authors>
+    <Description>SDK oficial Notifique para .NET — WhatsApp, SMS, Email, Push e templates</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/notifique/notifique-sdk</RepositoryUrl>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

@@ -6,6 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\packages\sdk-dotnet\src\Zenvio\Zenvio.csproj" />
+    <ProjectReference Include="..\..\packages\sdk-dotnet\src\Notifique\Notifique.csproj" />
   </ItemGroup>
 </Project>

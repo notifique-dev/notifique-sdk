@@ -1,58 +1,63 @@
 """
-Exemplo de uso do Zenvio SDK para Python — WhatsApp, SMS, Email e template.
+Exemplo de uso do Notifique SDK para Python — WhatsApp, SMS, Email e template.
 """
 
-from zenvio import Zenvio
+from notifique import Notifique, NotifiqueApiError
+
 
 def main():
-    zenvio = Zenvio(api_key="your_api_key_here")
+    notifique = Notifique(api_key="your_api_key_here")
     instance_id = "your_instance_id_here"
     phone = "5511999999999"
     email = "user@example.com"
 
-    print("--- Zenvio Python SDK ---")
+    print("--- Notifique Python SDK ---")
 
     # WhatsApp: texto (payload.message)
     print("\n1. WhatsApp texto...")
-    res = zenvio.whatsapp.send_text(instance_id, phone, "Olá do Python!")
-    print("message_ids:", res.get("message_ids"), "status:", res.get("status"))
+    res = notifique.whatsapp.send_text(instance_id, phone, "Olá do Python!")
+    print("messageIds:", res.get("data", {}).get("messageIds"), "status:", res.get("data", {}).get("status"))
 
-    # WhatsApp: imagem (media_url, file_name, mimetype obrigatórios)
+    # WhatsApp: imagem (mediaUrl, fileName, mimetype obrigatórios)
     print("\n2. WhatsApp imagem...")
-    res = zenvio.whatsapp.send(instance_id, {
+    res = notifique.whatsapp.send(instance_id, {
         "to": [phone],
         "type": "image",
-        "payload": {"media_url": "https://placehold.co/600x400/png", "file_name": "image.png", "mimetype": "image/png"},
+        "payload": {"mediaUrl": "https://placehold.co/600x400/png", "fileName": "image.png", "mimetype": "image/png"},
     })
-    print("message_ids:", res.get("message_ids"))
+    print("messageIds:", res.get("data", {}).get("messageIds"))
 
     # SMS
     print("\n3. SMS...")
-    res = zenvio.sms.send({"to": [phone], "message": "SMS de teste"})
-    print("sms_ids:", res.get("data", {}).get("sms_ids"))
+    res = notifique.sms.send({"to": [phone], "message": "SMS de teste"})
+    print("smsIds:", res.get("data", {}).get("smsIds"))
 
     # Email (use from_address; domínio deve estar verificado)
     print("\n4. Email...")
-    res = zenvio.email.send({
-        "from_address": "noreply@seudominio.com",
+    res = notifique.email.send({
+        "from": "noreply@seudominio.com",
         "to": [email],
         "subject": "Teste",
         "html": "<p>Olá!</p>",
     })
-    print("email_ids:", res.get("data", {}).get("email_ids"))
+    print("emailIds:", res.get("data", {}).get("emailIds"))
 
     # Envio por template (whatsapp + sms + email)
     print("\n5. Template multi-canal...")
-    res = zenvio.messages.send({
+    res = notifique.messages.send({
         "to": [phone, email],
         "template": "welcome",
         "variables": {"name": "Trial", "credits": 300},
         "channels": ["whatsapp", "sms", "email"],
-        "instance_id": instance_id,
-        "from_address": "noreply@seudominio.com",
+        "instanceId": instance_id,
+        "from": "noreply@seudominio.com",
     })
     print("data:", res.get("data"))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except NotifiqueApiError as e:
+        print(f"Error: {e.status_code} - {e.message}")
+        raise SystemExit(1)

@@ -1,7 +1,7 @@
 {
-    "name": "@zenvio/api",
+    "name": "@notifique/api",
     "version": "0.1.0",
-    "description": "Zenvio Backend API",
+    "description": "Notifique Backend API",
     "private": true,
     "main": "dist/index.js",
     "scripts": {
@@ -9,7 +9,7 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@zenvio/core": "*",
+        "@notifique/core": "*",
         "express": "^4.18.2"
     },
     "devDependencies": {

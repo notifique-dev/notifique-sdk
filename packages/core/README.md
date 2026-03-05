@@ -1,3 +1,3 @@
-# @zenvio/core
+# @notifique/core
 
-Shared types and interfaces for Zenvio SDKs.
+Shared types and interfaces for Notifique SDKs.

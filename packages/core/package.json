@@ -1,7 +1,7 @@
 {
-    "name": "@zenvio/core",
+    "name": "@notifique/core",
     "version": "0.1.0",
-    "description": "Core types and DTOs for Zenvio",
+    "description": "Core types and DTOs for Notifique SDK",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {

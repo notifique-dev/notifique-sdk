@@ -1,3 +1,3 @@
-module github.com/zenvio/zenvio-sdk/packages/sdk-go
+module github.com/notifique/notifique-sdk-go
 
 go 1.20

@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
+import { NotifiqueApiError } from '@notifique/core';
 import type {
-  ZenvioConfig,
+  NotifiqueConfig,
+  SendOptions,
   WhatsAppSendParams,
   WhatsAppSendResponse,
   WhatsAppMessageStatus,
@@ -11,6 +13,9 @@ import type {
   WhatsAppCreateInstanceResponse,
   WhatsAppInstanceActionResponse,
   WhatsAppInstance,
+  WhatsAppListMessagesParams,
+  WhatsAppListMessagesResponse,
+  WhatsAppInstanceQrResponse,
   SmsSendParams,
   SmsSendResponse,
   SmsStatusResponse,
@@ -19,18 +24,54 @@ import type {
   EmailSendResponse,
   EmailStatusResponse,
   EmailCancelResponse,
+  ListEmailDomainsResponse,
+  CreateEmailDomainRequest,
+  CreateEmailDomainResponse,
+  GetEmailDomainResponse,
+  VerifyEmailDomainResponse,
   MessagesSendParams,
   MessagesSendResponse,
-} from '@zenvio/core';
+  PushAppCreateRequest,
+  PushAppUpdateRequest,
+  PushAppListParams,
+  PushAppListResponse,
+  PushAppSingleResponse,
+  PushDeviceRegisterRequest,
+  PushDeviceListParams,
+  PushDeviceListResponse,
+  PushDeviceSingleResponse,
+  SendPushParams,
+  SendPushResponse,
+  PushMessageListParams,
+  PushMessageListResponse,
+  PushMessageSingleResponse,
+  CancelPushResponse,
+} from '@notifique/core';
 
-export * from '@zenvio/core';
+export { NotifiqueApiError } from '@notifique/core';
+export * from '@notifique/core';
+
+/** Converte chaves snake_case em camelCase (recursivo). A API retorna snake_case; o SDK expõe camelCase. */
+function toCamelCase<T>(value: unknown): T {
+  if (value === null || value === undefined) return value as T;
+  if (Array.isArray(value)) return value.map((item) => toCamelCase(item)) as T;
+  if (typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      out[camel] = toCamelCase(v);
+    }
+    return out as T;
+  }
+  return value as T;
+}
 
 function normalizeSendBody(
   instanceId: string,
-  params: Omit<WhatsAppSendParams, 'instance_id'>
+  params: Omit<WhatsAppSendParams, 'instanceId'>
 ): Record<string, unknown> {
   return {
-    instance_id: instanceId,
+    instanceId,
     to: params.to,
     type: params.type,
     payload: params.payload,
@@ -39,13 +80,21 @@ function normalizeSendBody(
   };
 }
 
-export class Zenvio {
-  private client: AxiosInstance;
-  private config: ZenvioConfig;
+function idempotencyHeaders(opts?: SendOptions): Record<string, string> | undefined {
+  if (!opts?.idempotencyKey) return undefined;
+  return {
+    'Idempotency-Key': opts.idempotencyKey,
+    'x-idempotency-key': opts.idempotencyKey,
+  };
+}
 
-  constructor(config: ZenvioConfig) {
+export class Notifique {
+  private client: AxiosInstance;
+  private config: NotifiqueConfig;
+
+  constructor(config: NotifiqueConfig) {
     this.config = {
-      baseUrl: 'https://api.zenvio.com/v1',
+      baseUrl: 'https://api.notifique.dev/v1',
       ...config,
     };
 
@@ -56,56 +105,91 @@ export class Zenvio {
         'Content-Type': 'application/json',
       },
     });
+
+    this.client.interceptors.response.use(
+      (response) => {
+        if (response.data !== undefined) {
+          response.data = toCamelCase(response.data);
+        }
+        return response;
+      },
+      (error) => {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status ?? 0;
+          const data = error.response?.data as Record<string, unknown> | undefined;
+          let message =
+            (typeof data === 'object' && data !== null && 'message' in data && typeof (data as { message?: unknown }).message === 'string')
+              ? (data as { message: string }).message
+              : error.message;
+          const details = typeof data === 'object' && data !== null && Array.isArray(data.details) ? data.details : undefined;
+          if (details && details.length > 0) {
+            const parts = (details as Array<{ field?: string; message?: string }>).map((d) => (d.field ? `${d.field}: ${d.message ?? ''}` : String(d.message ?? '')));
+            if (parts.length) message = `${message} (${parts.join('; ')})`;
+          }
+          throw new NotifiqueApiError(message, status, {
+            code: error.code,
+            responseData: data,
+          });
+        }
+        throw error;
+      }
+    );
   }
 
   /**
-   * WhatsApp API (matches POST/GET/DELETE/PATCH /v1/whatsapp/... and /v1/whatsapp/instances/...)
+   * WhatsApp API — POST/GET/DELETE/PATCH /v1/whatsapp/messages e /v1/whatsapp/instances
    */
   public whatsapp = {
-/**
-     * POST /v1/whatsapp/messages — Send one or more messages (1–100 recipients).
-     * @param instanceId Instance ID (WhatsApp connection).
-     * @param params instance_id is omitted; it is taken from the first argument.
-     */
+    /** POST /v1/whatsapp/messages — Envia uma ou mais mensagens (1–100 destinatários). opts.idempotencyKey envia header Idempotency-Key. */
     send: async <T extends WhatsAppSendParams['type']>(
       instanceId: string,
-      params: Omit<WhatsAppSendParams<T>, 'instance_id'>
-    ): Promise<WhatsAppSendResponse> => {
-      const response = await this.client.post<WhatsAppSendResponse>(
+      params: Omit<WhatsAppSendParams<T>, 'instanceId'>,
+      opts?: SendOptions
+    ): Promise<{ success: boolean; data: WhatsAppSendResponse }> => {
+      const response = await this.client.post<{ success: boolean; data: WhatsAppSendResponse }>(
         '/whatsapp/messages',
-        normalizeSendBody(instanceId, params as Omit<WhatsAppSendParams, 'instance_id'>)
+        normalizeSendBody(instanceId, params as Omit<WhatsAppSendParams, 'instanceId'>),
+        idempotencyHeaders(opts) ? { headers: idempotencyHeaders(opts) } : undefined
       );
       return response.data;
     },
 
-    /**
-     * Shortcut: send a text message. Uses payload.message.
-     */
+    /** Atalho: envia mensagem de texto. opts.idempotencyKey envia header Idempotency-Key. */
     sendText: async (
       instanceId: string,
       to: string | string[],
-      text: string
-    ): Promise<WhatsAppSendResponse> => {
-      return this.whatsapp.send(instanceId, {
-        to: Array.isArray(to) ? to : [to],
-        type: 'text',
-        payload: { message: text },
-      });
+      text: string,
+      opts?: SendOptions
+    ): Promise<{ success: boolean; data: WhatsAppSendResponse }> => {
+      return this.whatsapp.send(
+        instanceId,
+        { to: Array.isArray(to) ? to : [to], type: 'text', payload: { message: text } },
+        opts
+      );
     },
 
-    /**
-     * GET /v1/whatsapp/messages/:messageId — Message status (no success/data wrapper).
-     */
-    getMessage: async (messageId: string): Promise<WhatsAppMessageStatus> => {
-      const response = await this.client.get<WhatsAppMessageStatus>(
+    /** GET /v1/whatsapp/messages — Lista mensagens com paginação. */
+    listMessages: async (
+      params?: WhatsAppListMessagesParams
+    ): Promise<WhatsAppListMessagesResponse> => {
+      const response = await this.client.get<WhatsAppListMessagesResponse>(
+        '/whatsapp/messages',
+        { params }
+      );
+      return response.data;
+    },
+
+    /** GET /v1/whatsapp/messages/:messageId — Status de uma mensagem. */
+    getMessage: async (
+      messageId: string
+    ): Promise<{ success: boolean; data: WhatsAppMessageStatus }> => {
+      const response = await this.client.get<{ success: boolean; data: WhatsAppMessageStatus }>(
         `/whatsapp/messages/${messageId}`
       );
       return response.data;
     },
 
-    /**
-     * DELETE /v1/whatsapp/messages/:messageId — Delete message for everyone (revoke).
-     */
+    /** DELETE /v1/whatsapp/messages/:messageId — Apaga mensagem para todos. */
     deleteMessage: async (
       messageId: string
     ): Promise<WhatsAppMessageActionResponse> => {
@@ -115,9 +199,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * PATCH /v1/whatsapp/messages/:messageId/edit — Edit text of a sent message (text type only).
-     */
+    /** PATCH /v1/whatsapp/messages/:messageId/edit — Edita texto de mensagem enviada. */
     editMessage: async (
       messageId: string,
       body: { text: string }
@@ -129,9 +211,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * POST /v1/whatsapp/messages/:messageId/cancel — Cancel a queued/scheduled message.
-     */
+    /** POST /v1/whatsapp/messages/:messageId/cancel — Cancela mensagem agendada. */
     cancelMessage: async (
       messageId: string
     ): Promise<WhatsAppMessageActionResponse> => {
@@ -141,9 +221,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * GET /v1/whatsapp/instances — List instances (paginated).
-     */
+    /** GET /v1/whatsapp/instances — Lista instâncias (paginado). */
     listInstances: async (
       params?: WhatsAppInstanceListParams
     ): Promise<WhatsAppInstanceListResponse> => {
@@ -154,9 +232,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * GET /v1/whatsapp/instances/:instanceId — Get one instance.
-     */
+    /** GET /v1/whatsapp/instances/:instanceId — Obtém uma instância. */
     getInstance: async (
       instanceId: string
     ): Promise<{ success: boolean; data: WhatsAppInstance }> => {
@@ -167,9 +243,17 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * POST /v1/whatsapp/instances — Create instance (returns instance + evolution QR/status).
-     */
+    /** GET /v1/whatsapp/instances/:instanceId/qr — Obtém QR code atual da instância. */
+    getInstanceQr: async (
+      instanceId: string
+    ): Promise<WhatsAppInstanceQrResponse> => {
+      const response = await this.client.get<WhatsAppInstanceQrResponse>(
+        `/whatsapp/instances/${instanceId}/qr`
+      );
+      return response.data;
+    },
+
+    /** POST /v1/whatsapp/instances — Cria instância (retorna instance + connection QR). */
     createInstance: async (
       params: WhatsAppCreateInstanceParams
     ): Promise<WhatsAppCreateInstanceResponse> => {
@@ -180,9 +264,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * POST /v1/whatsapp/instances/:instanceId/disconnect — Disconnect (logout).
-     */
+    /** POST /v1/whatsapp/instances/:instanceId/disconnect — Desconecta instância. */
     disconnectInstance: async (
       instanceId: string
     ): Promise<WhatsAppInstanceActionResponse> => {
@@ -192,9 +274,7 @@ export class Zenvio {
       return response.data;
     },
 
-    /**
-     * DELETE /v1/whatsapp/instances/:instanceId — Delete instance (must not be ACTIVE).
-     */
+    /** DELETE /v1/whatsapp/instances/:instanceId — Remove instância (não pode estar ACTIVE). */
     deleteInstance: async (
       instanceId: string
     ): Promise<WhatsAppInstanceActionResponse> => {
@@ -206,9 +286,7 @@ export class Zenvio {
   };
 
   /**
-   * Envio genérico por template — POST /v1/templates/send.
-   * Envia para os canais indicados (whatsapp, sms, email). to pode ser números e/ou e-mails.
-   * Se channels incluir 'whatsapp', informe instance_id. Se incluir 'email', informe from.
+   * Envio por template — POST /v1/templates/send (whatsapp, sms, email).
    */
   public messages = {
     send: async (params: MessagesSendParams): Promise<MessagesSendResponse> => {
@@ -224,25 +302,19 @@ export class Zenvio {
    * SMS API — POST /v1/sms/messages, GET /v1/sms/messages/:id, POST /v1/sms/messages/:id/cancel
    */
   public sms = {
-    /**
-     * POST /v1/sms/messages — Envia um ou mais SMS (1–100 números). Escopo: sms:send.
-     */
-    send: async (params: SmsSendParams): Promise<SmsSendResponse> => {
-      const response = await this.client.post<SmsSendResponse>('/sms/messages', params);
+    /** opts.idempotencyKey envia header Idempotency-Key. */
+    send: async (params: SmsSendParams, opts?: SendOptions): Promise<SmsSendResponse> => {
+      const response = await this.client.post<SmsSendResponse>(
+        '/sms/messages',
+        params,
+        idempotencyHeaders(opts) ? { headers: idempotencyHeaders(opts) } : undefined
+      );
       return response.data;
     },
-
-    /**
-     * GET /v1/sms/messages/:id — Status de um SMS. Escopo: sms:read.
-     */
     get: async (id: string): Promise<SmsStatusResponse> => {
       const response = await this.client.get<SmsStatusResponse>(`/sms/messages/${id}`);
       return response.data;
     },
-
-    /**
-     * POST /v1/sms/messages/:id/cancel — Cancela SMS agendado (status SCHEDULED). Escopo: sms:cancel.
-     */
     cancel: async (id: string): Promise<SmsCancelResponse> => {
       const response = await this.client.post<SmsCancelResponse>(`/sms/messages/${id}/cancel`);
       return response.data;
@@ -250,41 +322,167 @@ export class Zenvio {
   };
 
   /**
-   * Email API — POST /v1/email/messages, GET /v1/email/messages/:id, POST /v1/email/messages/:id/cancel
+   * Email API — mensagens e domínios
    */
   public email = {
-    /**
-     * POST /v1/email/messages — Envia um ou mais e-mails (1–100 destinatários). Domínio do from deve estar verificado. Escopo: email:send.
-     */
-    send: async (params: EmailSendParams): Promise<EmailSendResponse> => {
-      const response = await this.client.post<EmailSendResponse>('/email/messages', params);
+    /** opts.idempotencyKey envia header Idempotency-Key. */
+    send: async (params: EmailSendParams, opts?: SendOptions): Promise<EmailSendResponse> => {
+      const response = await this.client.post<EmailSendResponse>(
+        '/email/messages',
+        params,
+        idempotencyHeaders(opts) ? { headers: idempotencyHeaders(opts) } : undefined
+      );
       return response.data;
     },
-
-    /**
-     * GET /v1/email/messages/:id — Status de um e-mail. Escopo: email:read.
-     */
     get: async (id: string): Promise<EmailStatusResponse> => {
       const response = await this.client.get<EmailStatusResponse>(`/email/messages/${id}`);
       return response.data;
     },
-
-    /**
-     * POST /v1/email/messages/:id/cancel — Cancela e-mail agendado (status SCHEDULED). Escopo: email:cancel.
-     */
     cancel: async (id: string): Promise<EmailCancelResponse> => {
       const response = await this.client.post<EmailCancelResponse>(`/email/messages/${id}/cancel`);
       return response.data;
     },
+    /** GET /v1/email/domains — Lista domínios de e-mail. */
+    domains: {
+      list: async (): Promise<ListEmailDomainsResponse> => {
+        const response = await this.client.get<ListEmailDomainsResponse>('/email/domains');
+        return response.data;
+      },
+      create: async (
+        params: CreateEmailDomainRequest
+      ): Promise<CreateEmailDomainResponse> => {
+        const response = await this.client.post<CreateEmailDomainResponse>(
+          '/email/domains',
+          params
+        );
+        return response.data;
+      },
+      get: async (id: string): Promise<GetEmailDomainResponse> => {
+        const response = await this.client.get<GetEmailDomainResponse>(
+          `/email/domains/${id}`
+        );
+        return response.data;
+      },
+      verify: async (id: string): Promise<VerifyEmailDomainResponse> => {
+        const response = await this.client.post<VerifyEmailDomainResponse>(
+          `/email/domains/${id}/verify`
+        );
+        return response.data;
+      },
+    },
   };
 
   /**
-   * Re-throw axios errors; use in try/catch if you need raw errors.
-   * By default methods return data and throw on HTTP errors.
+   * Push API — apps, dispositivos e mensagens
    */
+  public push = {
+    apps: {
+      list: async (params?: PushAppListParams): Promise<PushAppListResponse> => {
+        const response = await this.client.get<PushAppListResponse>(
+          '/push/apps',
+          { params }
+        );
+        return response.data;
+      },
+      get: async (id: string): Promise<PushAppSingleResponse> => {
+        const response = await this.client.get<PushAppSingleResponse>(
+          `/push/apps/${id}`
+        );
+        return response.data;
+      },
+      create: async (
+        params: PushAppCreateRequest
+      ): Promise<PushAppSingleResponse> => {
+        const response = await this.client.post<PushAppSingleResponse>(
+          '/push/apps',
+          params
+        );
+        return response.data;
+      },
+      update: async (
+        id: string,
+        params: PushAppUpdateRequest
+      ): Promise<PushAppSingleResponse> => {
+        const response = await this.client.put<PushAppSingleResponse>(
+          `/push/apps/${id}`,
+          params
+        );
+        return response.data;
+      },
+      delete: async (id: string): Promise<{ success: boolean }> => {
+        const response = await this.client.delete<{ success: boolean }>(
+          `/push/apps/${id}`
+        );
+        return response.data;
+      },
+    },
+    devices: {
+      register: async (
+        params: PushDeviceRegisterRequest
+      ): Promise<PushDeviceSingleResponse> => {
+        const response = await this.client.post<PushDeviceSingleResponse>(
+          '/push/devices',
+          params
+        );
+        return response.data;
+      },
+      list: async (params?: PushDeviceListParams): Promise<PushDeviceListResponse> => {
+        const response = await this.client.get<PushDeviceListResponse>(
+          '/push/devices',
+          { params }
+        );
+        return response.data;
+      },
+      get: async (id: string): Promise<PushDeviceSingleResponse> => {
+        const response = await this.client.get<PushDeviceSingleResponse>(
+          `/push/devices/${id}`
+        );
+        return response.data;
+      },
+      delete: async (id: string): Promise<{ success: boolean }> => {
+        const response = await this.client.delete<{ success: boolean }>(
+          `/push/devices/${id}`
+        );
+        return response.data;
+      },
+    },
+    messages: {
+      /** opts.idempotencyKey envia header Idempotency-Key. */
+      send: async (params: SendPushParams, opts?: SendOptions): Promise<SendPushResponse> => {
+        const response = await this.client.post<SendPushResponse>(
+          '/push/messages',
+          params,
+          idempotencyHeaders(opts) ? { headers: idempotencyHeaders(opts) } : undefined
+        );
+        return response.data;
+      },
+      list: async (params?: PushMessageListParams): Promise<PushMessageListResponse> => {
+        const response = await this.client.get<PushMessageListResponse>(
+          '/push/messages',
+          { params }
+        );
+        return response.data;
+      },
+      get: async (id: string): Promise<PushMessageSingleResponse> => {
+        const response = await this.client.get<PushMessageSingleResponse>(
+          `/push/messages/${id}`
+        );
+        return response.data;
+      },
+      cancel: async (id: string): Promise<CancelPushResponse> => {
+        const response = await this.client.post<CancelPushResponse>(
+          `/push/messages/${id}/cancel`
+        );
+        return response.data;
+      },
+    },
+  };
+
   public getClient(): AxiosInstance {
     return this.client;
   }
 }
 
-export default Zenvio;
+export default Notifique;
+
+/** @deprecated Use Notifique */

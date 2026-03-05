@@ -2,50 +2,30 @@ package main
 
 import (
 	"fmt"
-	"github.com/zenvio/zenvio-sdk/packages/sdk-go"
+	"github.com/notifique/notifique-sdk-go"
 )
 
 func main() {
-	// 1. Initialize the client
-	client := zenvio.NewClient("your_api_key_here")
+	client := notifique.NewClient("your_api_key_here")
 
 	phoneID := "your_phone_id_here"
 	recipient := "5511999999999"
 
-	fmt.Println("--- Starting Zenvio Go SDK Example ---")
+	fmt.Println("--- Notifique Go SDK Example ---")
 
-	// 2. Simple text message
-	fmt.Println("\n1. Sending simplified text...")
+	fmt.Println("\n1. Sending text...")
 	resp, err := client.WhatsApp.SendText(phoneID, []string{recipient}, "Hello from Go! 🐹")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	} else {
-		fmt.Printf("Result: Success=%v, Error=%s\n", resp.Success, resp.Error)
+		fmt.Printf("Result: Success=%v, MessageIDs=%v\n", resp.Success, resp.Data.MessageIDs)
 	}
 
-	// 3. Full parameters example (Template)
-	fmt.Println("\n2. Sending template message...")
-	resp2, err := client.WhatsApp.Send(phoneID, zenvio.SendParams{
-		To:   []string{recipient},
-		Type: zenvio.TypeTemplate,
-		Payload: zenvio.TemplatePayload{
-			Key:       "welcome_template",
-			Language:  "en_US",
-			Variables: []string{"Go Developer"},
-		},
-	})
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	} else {
-		fmt.Printf("Result: Success=%v, MessageID=%s\n", resp2.Success, resp2.MessageID)
-	}
-
-	// 4. Image example (media_url, file_name, mimetype obrigatórios)
-	fmt.Println("\n3. Sending image...")
-	resp3, err := client.WhatsApp.Send(phoneID, zenvio.WhatsAppSendParams{
+	fmt.Println("\n2. Sending image...")
+	resp2, err := client.WhatsApp.Send(phoneID, notifique.WhatsAppSendParams{
 		To:   []string{recipient},
 		Type: "image",
-		Payload: zenvio.WhatsAppMediaPayload{
+		Payload: notifique.WhatsAppMediaPayload{
 			MediaURL: "https://placehold.co/600x400/png",
 			FileName: "image.png",
 			Mimetype: "image/png",
@@ -54,6 +34,6 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	} else {
-		fmt.Printf("Result: Success=%v\n", resp3.Success)
+		fmt.Printf("Result: Success=%v\n", resp2.Success)
 	}
 }

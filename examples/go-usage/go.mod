@@ -1,5 +1,7 @@
-module zenvio-go-example
+module notifique-go-example
 
 go 1.20
 
-require github.com/zenvio/zenvio-sdk/packages/sdk-go v0.1.0
+require github.com/notifique/notifique-sdk-go v0.1.0
+
+replace github.com/notifique/notifique-sdk-go => ../../packages/sdk-go

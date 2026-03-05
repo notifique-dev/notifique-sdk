@@ -1,8 +1,12 @@
 {
-    "name": "zenvio/php-example",
-    "description": "Example usage of Zenvio PHP SDK",
-    "type": "project",
+    "name": "zenvio/php-usage-example",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/sdk-php"
+        }
+    ],
     "require": {
-        "zenvio/zenvio-sdk": "^0.1.0"
+        "notifique/notifique-sdk-php": "*"
     }
 }

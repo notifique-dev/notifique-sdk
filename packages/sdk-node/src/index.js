@@ -17,10 +17,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Zenvio = void 0;
+exports.Notifique = void 0;
 const axios_1 = __importDefault(require("axios"));
-__exportStar(require("@zenvio/core"), exports);
-class Zenvio {
+__exportStar(require("@notifique/core"), exports);
+class Notifique {
     client;
     config;
     /**
@@ -57,7 +57,7 @@ class Zenvio {
     };
     constructor(config) {
         this.config = {
-            baseUrl: 'https://api.zenvio.com/v1',
+            baseUrl: 'https://api.notifique.dev/v1',
             ...config,
         };
         this.client = axios_1.default.create({
@@ -81,5 +81,5 @@ class Zenvio {
         };
     }
 }
-exports.Zenvio = Zenvio;
-exports.default = Zenvio;
+exports.Notifique = Notifique;
+exports.default = Notifique;

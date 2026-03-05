@@ -3,7 +3,7 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     moduleNameMapper: {
-        '^@zenvio/core$': '<rootDir>/packages/core/src',
+        '^@notifique/core$': '<rootDir>/packages/core/src',
     },
     testMatch: ['**/tests/**/*.test.ts'],
     transform: {

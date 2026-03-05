@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.zenvio.example</groupId>
-    <artifactId>zenvio-java-example</artifactId>
+    <groupId>com.notifique.example</groupId>
+    <artifactId>notifique-java-example</artifactId>
     <version>1.0.0</version>
 
     <properties>
@@ -15,8 +15,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.zenvio</groupId>
-            <artifactId>zenvio-sdk</artifactId>
+            <groupId>com.notifique</groupId>
+            <artifactId>notifique-sdk</artifactId>
             <version>0.1.0</version>
         </dependency>
         <!-- Need Jackson at runtime since it's a dependency of the SDK -->
@@ -26,4 +26,26 @@
             <version>2.15.2</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <mainClass>com.notifique.example.Main</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

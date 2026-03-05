@@ -1,15 +1,15 @@
-using Zenvio;
-using Zenvio.Models.WhatsApp;
-using Zenvio.Models.Sms;
-using Zenvio.Models.Email;
-using Zenvio.Models.Messages;
+using Notifique;
+using Notifique.Models.WhatsApp;
+using Notifique.Models.Sms;
+using Notifique.Models.Email;
+using Notifique.Models.Messages;
 
-var apiKey = Environment.GetEnvironmentVariable("ZENVIO_API_KEY") ?? "your-api-key";
-var instanceId = Environment.GetEnvironmentVariable("ZENVIO_INSTANCE_ID") ?? "your-instance-id";
+var apiKey = Environment.GetEnvironmentVariable("NOTIFIQUE_API_KEY") ?? "your-api-key";
+var instanceId = Environment.GetEnvironmentVariable("NOTIFIQUE_INSTANCE_ID") ?? "your-instance-id";
 var phoneNumber = "5511967741929";
 var email = "user@example.com";
 
-using var client = new ZenvioClient(apiKey, "https://api.zenvio.dev");
+using var client = new NotifiqueClient(apiKey);
 
 // --- SMS ---
 try
@@ -23,7 +23,7 @@ try
     var smsResponse = await client.Sms.SendAsync(smsParams);
     Console.WriteLine($"Status: {smsResponse.Data.Status}, IDs: {string.Join(", ", smsResponse.Data.SmsIds)}");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"SMS Error: {ex.StatusCode} — {ex.ResponseBody}");
 }
@@ -33,9 +33,9 @@ try
 {
     Console.WriteLine("\n--- WhatsApp: Send Text ---");
     var textResponse = await client.WhatsApp.SendTextAsync(instanceId, phoneNumber, "Hello from .NET SDK!");
-    Console.WriteLine($"Status: {textResponse.Status}, IDs: {string.Join(", ", textResponse.MessageIds)}");
+    Console.WriteLine($"Status: {textResponse.Data.Status}, IDs: {string.Join(", ", textResponse.Data.MessageIds)}");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"WhatsApp Text Error: {ex.StatusCode} — {ex.ResponseBody}");
 }
@@ -55,9 +55,9 @@ try
         )
     };
     var imageResponse = await client.WhatsApp.SendAsync(instanceId, imageParams);
-    Console.WriteLine($"Status: {imageResponse.Status}");
+    Console.WriteLine($"Status: {imageResponse.Data.Status}");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"WhatsApp Image Error: {ex.StatusCode} — {ex.ResponseBody}");
 }
@@ -69,15 +69,15 @@ try
     var emailParams = new EmailSendParams
     {
         From = "noreply@yourdomain.com",
-        FromName = "Zenvio .NET SDK",
+        FromName = "Notifique .NET SDK",
         To = new List<string> { email },
-        Subject = "Hello from Zenvio .NET SDK",
-        Html = "<h1>Hello!</h1><p>This email was sent using the Zenvio .NET SDK.</p>"
+        Subject = "Hello from Notifique .NET SDK",
+        Html = "<h1>Hello!</h1><p>This email was sent using the Notifique .NET SDK.</p>"
     };
     var emailResponse = await client.Email.SendAsync(emailParams);
     Console.WriteLine($"Status: {emailResponse.Data.Status}, IDs: {string.Join(", ", emailResponse.Data.EmailIds)}");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"Email Error: {ex.StatusCode} — {ex.ResponseBody}");
 }
@@ -97,7 +97,7 @@ try
     var templateResponse = await client.Messages.SendAsync(templateParams);
     Console.WriteLine($"Status: {templateResponse.Data.Status}");
 }
-catch (ZenvioApiException ex)
+catch (NotifiqueApiException ex)
 {
     Console.WriteLine($"Templates Error: {ex.StatusCode} — {ex.ResponseBody}");
 }

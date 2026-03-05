@@ -1,12 +1,12 @@
 {
-    "name": "zenvio/zenvio-sdk",
-    "description": "Official Zenvio SDK for PHP",
+    "name": "notifique/notifique-sdk-php",
+    "description": "SDK oficial Notifique para PHP",
     "version": "0.1.0",
     "license": "MIT",
     "authors": [
         {
-            "name": "Zenvio",
-            "email": "support@zenvio.com"
+            "name": "Notifique",
+            "email": "suporte@notifique.dev"
         }
     ],
     "require": {
@@ -18,12 +18,15 @@
     },
     "autoload": {
         "psr-4": {
-            "Zenvio\\": "src/"
+            "Notifique\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Zenvio\\Tests\\": "tests/"
+            "Notifique\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }

@@ -1,15 +1,15 @@
 <?php
 
-namespace Zenvio;
+namespace Notifique;
 
 /**
  * SMS — POST /v1/sms/messages, GET /v1/sms/messages/:id, POST /v1/sms/messages/:id/cancel
  */
 class Sms
 {
-    private Zenvio $client;
+    private Notifique $client;
 
-    public function __construct(Zenvio $client)
+    public function __construct(Notifique $client)
     {
         $this->client = $client;
     }
@@ -17,10 +17,15 @@ class Sms
     /**
      * POST /v1/sms/messages
      * @param array{to: list<string>, message: string, schedule?: array, options?: array} $params
+     * @param string|null $idempotencyKey Chave única para evitar envio duplicado (header Idempotency-Key).
      */
-    public function send(array $params): array
+    public function send(array $params, ?string $idempotencyKey = null): array
     {
-        return $this->client->request('POST', '/sms/messages', $params);
+        $options = [];
+        if ($idempotencyKey !== null && $idempotencyKey !== '') {
+            $options['headers'] = ['Idempotency-Key' => $idempotencyKey];
+        }
+        return $this->client->request('POST', '/sms/messages', $params, $options);
     }
 
     /** GET /v1/sms/messages/:id */

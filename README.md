@@ -1,75 +1,98 @@
-# 🚀 Zenvio SDK
+# 🚀 Notifique SDK
 
-Welcome to the official Zenvio SDK monorepo. Zenvio provides a powerful, unified API for multi-channel communication, starting with WhatsApp.
+Monorepo dos SDKs oficiais **Notifique** para comunicação multicanal: WhatsApp, SMS, Email e Push.
 
-This monorepo contains SDKs for all major programming languages, ensuring a seamless developer experience regardless of your tech stack.
+Todos os SDKs usam por padrão a base URL `https://api.notifique.dev/v1` e seguem a mesma arquitetura por namespaces.
 
 ---
 
-## 📦 SDKs & Packages
+## 📦 SDKs e pacotes
 
-| Language | Package | Status |
+| Linguagem | Pacote | Status |
 | :--- | :--- | :--- |
-| **Node.js** | `@zenvio/sdk-node` | ✅ Stable |
-| **Python** | `zenvio-sdk` | ✅ Stable |
-| **Java** | `zenvio-sdk` | ✅ Stable |
-| **Go** | `zenvio-sdk-go` | ✅ Stable |
-| **PHP** | `zenvio-sdk-php` | ✅ Stable |
-| **Elixir** | `zenvio_ex` | ✅ Stable |
-| **.NET** | `Zenvio` | ✅ Stable |
+| **Node.js** | `@notifique/core`, `@notifique/sdk-node` | ✅ Estável |
+| **Python** | `notifique-sdk` (classe `Notifique`) | ✅ Estável |
+| **Java** | `com.notifique.sdk` (classe `Notifique`) | ✅ Estável |
+| **Go** | `github.com/notifique/notifique-sdk-go` (pacote `notifique`) | ✅ Estável |
+| **PHP** | `notifique/notifique-sdk-php` (classe `Notifique\Notifique`) | ✅ Estável |
+| **Elixir** | `notifique` (módulo `Notifique`) | ✅ Estável |
+| **.NET** | `Notifique` (classe `NotifiqueClient`) | ✅ Estável |
 
 ---
 
-## 🛠️ Quick Start (Unified API)
+## 🛠️ Quick Start (API unificada)
 
-All Zenvio SDKs follow a consistent, namespaced architecture. Whether you are using Java or Python, the logic remains the same.
+Use o cliente **Notifique** (ou equivalente) e a mesma lógica em todas as linguagens.
 
 ### Node.js
 ```typescript
-const zenvio = new Zenvio({ apiKey: '...' });
-await zenvio.whatsapp.sendText(phoneId, '55119...', 'Hello! 🚀');
+const notifique = new Notifique({ apiKey: '...' });
+const { data } = await notifique.whatsapp.sendText(instanceId, '55119...', 'Hello! 🚀');
 ```
 
 ### Python
 ```python
-zenvio = Zenvio(api_key='...')
-zenvio.whatsapp.send_text(phone_id, '55119...', 'Hello! 🐍')
+notifique = Notifique(api_key='...')
+resp = notifique.whatsapp.send_text(instance_id, '55119...', 'Hello! 🐍')
 ```
 
 ### Java
 ```java
-Zenvio zenvio = new Zenvio("...");
-zenvio.whatsapp.sendText(phoneId, "55119...", "Hello! ☕");
+Notifique notifique = new Notifique("...");
+WhatsAppSendEnvelope r = notifique.getWhatsApp().sendText(instanceId, "55119...", "Hello! ☕");
 ```
 
 ### Go
 ```go
-client := zenvio.NewClient("...")
-client.WhatsApp.SendText(phoneID, []string{"55119..."}, "Hello! 🐹")
+client := notifique.NewClient("...")
+r, _ := client.WhatsApp.SendText(instanceID, []string{"55119..."}, "Hello! 🐹")
 ```
 
 ### PHP
 ```php
-$zenvio = new Zenvio('...');
-$zenvio.whatsapp.sendText($phoneId, '55119...', 'Hello! 🐘');
+$notifique = new Notifique('...');
+$notifique->whatsapp()->sendText($instanceId, '55119...', 'Hello! 🐘');
 ```
 
 ### C# (.NET)
 ```csharp
-var client = new ZenvioClient("...");
-await client.WhatsApp.SendTextAsync(instanceId, "55119...", "Hello! 🔷");
+var client = new NotifiqueClient("...");
+var response = await client.WhatsApp.SendTextAsync(instanceId, "55119...", "Hello! 🔷");
+```
+
+### Elixir
+```elixir
+client = Notifique.new("...")
+{:ok, body} = Notifique.Whatsapp.send_text(client, instance_id, ["55119..."], "Hello!")
 ```
 
 ---
 
-## 🎨 Message Types
+## O que está disponível em cada canal
 
-Zenvio supports a wide variety of message types across all platforms:
+### WhatsApp
+- **Envio** — texto, imagem, vídeo, áudio, documento, localização, contato (com agendamento e opções).
+- **Mensagens** — listar, obter status, editar, apagar, cancelar.
+- **Instâncias** — listar, obter, criar, desconectar, excluir; obter QR da instância.
 
-- **Text**: Simple text messages with formatting.
-- **Media**: Images, Documents, Audio, and Video.
-- **Interactive**: Buttons and Lists for engaging user flows.
-- **Templates**: Pre-approved Meta/WhatsApp templates with variables.
+### SMS
+- **Envio** — uma ou mais mensagens (1–100 números), com agendamento e opções.
+- **Status** — consultar por ID.
+- **Cancelar** — cancelar SMS agendado.
+
+### Email
+- **Envio** — um ou mais e-mails (remetente, assunto, texto/html), com agendamento.
+- **Status** — consultar por ID.
+- **Cancelar** — cancelar e-mail agendado.
+- **Domínios** — listar, criar, obter, verificar (DNS).
+
+### Push
+- **Apps** — listar, obter, criar, atualizar, excluir.
+- **Devices** — registrar (web/android/ios), listar, obter, excluir.
+- **Mensagens** — enviar, listar, obter, cancelar.
+
+### Messages (templates)
+- **Envio** — por template em múltiplos canais (whatsapp, sms, email) com variáveis e `instance_id`.
 
 ---
 
@@ -101,46 +124,14 @@ For detailed installation and usage instructions, please refer to the individual
 This project uses a monorepo structure. 
 
 ```text
-zenvio-sdk/
-├── packages/      # Core SDK packages
-└── examples/      # Multi-language implementation examples
+notifique-sdk/
+├── packages/      # Pacotes dos SDKs
+└── examples/      # Exemplos em várias linguagens
 ```
 
 ---
 
+## 📄 Licença
 
-# Task: Zenvio SDK Comprehensive Audit and Refinement (COMPLETED)
-
-## Results Summary
-All SDKs have been audited and updated to ensure consistency with the Zenvio Core Contract. Each language now possesses exhaustive test coverage for all message types and interactive payloads.
-
-### 1. Contract and Type Verification
-- ✅ **Node.js**: Strictly typed using `@zenvio/core`.
-- ✅ **Python**: Used `TypedDict` and `Literal` for full static analysis support.
-- ✅ **Java**: Robust POJO model in `com.zenvio.sdk.model` with Jackson annotations.
-- ✅ **Elixir**: Functional map-based approach with clear documentation.
-- ✅ **Go**: Strongly typed structs with JSON tags.
-- ✅ **PHP**: PSR-4 compliant classes and types.
-
-### 2. Exhaustive Test Coverage
-Implemented real mock tests for ALL types:
-- `text` (Shortcut and Full)
-- `image`, `video`, `audio`, `document`
-- `buttons`, `list`
-- `template`
-- API Error scenarios (400, 401, 429)
-
-### 3. Documentation Completeness
-- ✅ **READMEs**: Updated each SDK's README with exhaustive examples.
-- ✅ **Root README**: Redesigned with premium aesthetics and unified quick-start guides.
-
-### 4. Final Sanity Check
-- ✅ No relative paths in examples.
-- ✅ Consistent naming conventions (`phoneId`, `to`, `payload`).
-- ✅ Dependencies verified for all languages.
-
-
-## 📄 License
-
-MIT © [Zenvio](https://zenvio.com)
+MIT © [Notifique](https://notifique.com)
 

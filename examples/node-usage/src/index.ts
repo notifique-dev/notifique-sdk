@@ -1,50 +1,60 @@
-import { Zenvio } from '@zenvio/sdk-node';
+import { Notifique, NotifiqueApiError } from '@notifique/sdk-node';
 
 /**
- * Zenvio SDK — WhatsApp (aligned with API)
+ * Notifique SDK — WhatsApp (alinhado à API)
  *
  * Run: npm run build (monorepo root), then npm start (here)
+ * Set NOTIFIQUE_API_KEY e NOTIFIQUE_INSTANCE_ID para chamar a API.
+ * Respostas e erros vêm em camelCase; erros são NotifiqueApiError com statusCode e message.
  */
 
 async function main() {
-  const zenvio = new Zenvio({
-    apiKey: 'your_api_key_here',
-  });
+  const apiKey = process.env.NOTIFIQUE_API_KEY || 'your_api_key_here';
+  const instanceId = process.env.NOTIFIQUE_INSTANCE_ID || 'your_instance_id_here';
+  const myPhoneNumber = process.env.MY_PHONE || '5511999999999';
 
-  const instanceId = 'your_instance_id_here';
-  const myPhoneNumber = '5511999999999';
+  if (apiKey === 'your_api_key_here' || instanceId === 'your_instance_id_here') {
+    console.log('Dica: defina NOTIFIQUE_API_KEY e NOTIFIQUE_INSTANCE_ID para chamar a API de verdade.');
+  }
 
-  console.log('--- Zenvio SDK WhatsApp Example ---');
+  const notifique = new Notifique({ apiKey });
+
+  console.log('--- Notifique SDK WhatsApp Example ---\n');
 
   try {
-    // 1. Text (shortcut) — POST /v1/whatsapp/messages with payload.message
     console.log('Sending text (sendText)...');
-    const simpleRes = await zenvio.whatsapp.sendText(instanceId, myPhoneNumber, 'Simple hello! 👋');
-    console.log('Result:', simpleRes.message_ids, simpleRes.status);
+    const simpleRes = await notifique.whatsapp.sendText(instanceId, myPhoneNumber, 'Simple hello! 👋');
+    console.log('Result:', simpleRes.data?.messageIds, simpleRes.data?.status);
 
-    // 2. Text (full) — payload.message
     console.log('\nSending text (send)...');
-    const textRes = await zenvio.whatsapp.send(instanceId, {
+    const textRes = await notifique.whatsapp.send(instanceId, {
       to: [myPhoneNumber],
       type: 'text',
-      payload: { message: 'Hello from Zenvio! 🚀' },
+      payload: { message: 'Hello from Notifique! 🚀' },
     });
-    console.log('Result:', textRes.message_ids);
+    console.log('Result:', textRes.data?.messageIds);
 
-    // 3. Image — payload.media_url
+    // Imagem: use URL pública e direta (sem redirect, sem login). placehold.co às vezes não é exibida no WhatsApp.
     console.log('\nSending image...');
-    const imageRes = await zenvio.whatsapp.send(instanceId, {
+    const imageRes = await notifique.whatsapp.send(instanceId, {
       to: [myPhoneNumber],
       type: 'image',
-      payload: { media_url: 'https://placehold.co/600x400/png', file_name: 'image.png', mimetype: 'image/png' },
+      payload: {
+        mediaUrl: 'https://static.wixstatic.com/media/082347_8e0de42df3924a62b4bada32eebaf087~mv2.png',
+        fileName: 'image.png',
+        mimetype: 'image/png',
+        caption: 'Notifique Logo',
+      },
     });
-    console.log('Result:', imageRes.message_ids);
+    console.log('Result:', imageRes.data?.messageIds);
 
-    // 4. Optional: list instances, get message status, etc.
-    // const instances = await zenvio.whatsapp.listInstances({ limit: '10' });
-    // const status = await zenvio.whatsapp.getMessage('message-id-here');
-  } catch (error) {
-    console.error('Error:', error);
+    console.log('\nDone.');
+  } catch (err: unknown) {
+    if (err instanceof NotifiqueApiError) {
+      console.error(`Error: ${err.statusCode} - ${err.message}`);
+    } else {
+      console.error('Error:', err instanceof Error ? err.message : String(err));
+    }
   }
 }
 

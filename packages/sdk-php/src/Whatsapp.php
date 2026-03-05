@@ -1,45 +1,63 @@
 <?php
 
-namespace Zenvio;
+namespace Notifique;
 
 /**
  * WhatsApp — POST /v1/whatsapp/messages, GET/DELETE/PATCH/POST /v1/whatsapp/messages/:id, /v1/whatsapp/instances/...
  */
 class Whatsapp
 {
-    private Zenvio $client;
+    private Notifique $client;
 
-    public function __construct(Zenvio $client)
+    public function __construct(Notifique $client)
     {
         $this->client = $client;
     }
 
     /**
-     * POST /v1/whatsapp/messages — instance_id no body
-     * Tipos: text (payload.message), image|video|audio|document (payload.media_url, file_name, mimetype — todos obrigatórios), location (payload.latitude, longitude, name, address), contact (payload.contact com fullName, wuid/phoneNumber e opcionalmente organization, email, url; ou payload.contact_id = ID do contato do workspace)
+     * POST /v1/whatsapp/messages — instanceId no body
+     * Tipos: text (payload.message), image|video|audio|document (payload.mediaUrl, fileName, mimetype — todos obrigatórios), location (payload.latitude, longitude, name, address), contact (payload.contact com fullName, wuid/phoneNumber e opcionalmente organization, email, url; ou payload.contactId = ID do contato do workspace)
      * @param array{to: list<string>, type: string, payload: array, schedule?: array, options?: array} $params
+     * @param string|null $idempotencyKey Chave única para evitar envio duplicado (header Idempotency-Key).
      */
-    public function send(string $instanceId, array $params): array
+    public function send(string $instanceId, array $params, ?string $idempotencyKey = null): array
     {
-        $params['instance_id'] = $instanceId;
-        return $this->client->request('POST', '/whatsapp/messages', $params);
+        $params['instanceId'] = $instanceId;
+        $options = [];
+        if ($idempotencyKey !== null && $idempotencyKey !== '') {
+            $options['headers'] = ['Idempotency-Key' => $idempotencyKey];
+        }
+        return $this->client->request('POST', '/whatsapp/messages', $params, $options);
     }
 
     /**
      * Atalho: texto (payload.message)
      * @param string|list<string> $to
+     * @param string|null $idempotencyKey Chave única para evitar envio duplicado (header Idempotency-Key).
      */
-    public function sendText(string $instanceId, string|array $to, string $text): array
+    public function sendText(string $instanceId, string|array $to, string $text, ?string $idempotencyKey = null): array
     {
         $to = is_array($to) ? $to : [$to];
         return $this->send($instanceId, [
             'to' => $to,
             'type' => 'text',
             'payload' => ['message' => $text],
-        ]);
+        ], $idempotencyKey);
     }
 
-    /** GET /v1/whatsapp/messages/:messageId */
+    /**
+     * GET /v1/whatsapp/messages — lista mensagens (params: page, limit, fromDate, toDate, instanceIds, status, type, includeEvents)
+     */
+    public function listMessages(array $params = []): array
+    {
+        $path = '/whatsapp/messages';
+        if ($params !== []) {
+            $path .= '?' . http_build_query($params);
+        }
+        return $this->client->request('GET', $path, null);
+    }
+
+    /** GET /v1/whatsapp/messages/:messageId — retorna envelope success/data */
     public function getMessage(string $messageId): array
     {
         return $this->client->request('GET', '/whatsapp/messages/' . $messageId, null);
@@ -82,7 +100,17 @@ class Whatsapp
         return $this->client->request('GET', '/whatsapp/instances/' . $instanceId, null);
     }
 
-    /** POST /v1/whatsapp/instances */
+    /** GET /v1/whatsapp/instances/:instanceId/qr */
+    public function getInstanceQr(string $instanceId): array
+    {
+        return $this->client->request('GET', '/whatsapp/instances/' . $instanceId . '/qr', null);
+    }
+
+    /**
+     * POST /v1/whatsapp/instances — cria instância.
+     * Resposta: ['success' => true, 'data' => ['instance' => [...], 'connection' => ['base64' => qr_data_url, 'code' => ..., 'pairingCode' => ..., 'count' => ...]]].
+     * Use $resp['data']['connection']['base64'] para exibir o QR code.
+     */
     public function createInstance(string $name): array
     {
         return $this->client->request('POST', '/whatsapp/instances', ['name' => $name]);

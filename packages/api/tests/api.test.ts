@@ -17,30 +17,32 @@ app.post('/v1/whatsapp/messages', (req, res) => {
   }
 
   if (['image', 'video', 'audio', 'document'].includes(type)) {
-    if (!payload.media_url) return res.status(400).json({ success: false, error: `${type} requires payload.media_url` });
-    if (!payload.file_name) return res.status(400).json({ success: false, error: `${type} requires payload.file_name` });
+    const mediaUrl = payload.mediaUrl ?? payload.media_url;
+    const fileName = payload.fileName ?? payload.file_name;
+    if (!mediaUrl) return res.status(400).json({ success: false, error: `${type} requires payload.mediaUrl` });
+    if (!fileName) return res.status(400).json({ success: false, error: `${type} requires payload.fileName` });
     if (!payload.mimetype) return res.status(400).json({ success: false, error: `${type} requires payload.mimetype` });
   }
 
   res.status(202).json({
-    message_ids: ['api-msg-999'],
+    messageIds: ['api-msg-999'],
     status: 'queued',
   });
 });
 
 describe('Backend API Contract (WhatsApp send)', () => {
-  it('accepts POST /v1/whatsapp/messages with instance_id in body', async () => {
+  it('accepts POST /v1/whatsapp/messages with instanceId in body', async () => {
     const response = await request(app)
       .post('/v1/whatsapp/messages')
       .send({
-        instance_id: 'instance-123',
+        instanceId: 'instance-123',
         to: ['5511999999999'],
         type: 'text',
         payload: { message: 'Hello' },
       });
 
     expect(response.status).toBe(202);
-    expect(response.body.message_ids).toEqual(['api-msg-999']);
+    expect(response.body.messageIds).toEqual(['api-msg-999']);
     expect(response.body.status).toBe('queued');
   });
 
@@ -48,7 +50,7 @@ describe('Backend API Contract (WhatsApp send)', () => {
     const response = await request(app)
       .post('/v1/whatsapp/messages')
       .send({
-        instance_id: 'instance-123',
+        instanceId: 'instance-123',
         to: ['5511999999999'],
         type: 'text',
         payload: { url: 'http://wrong' },

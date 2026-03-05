@@ -1,15 +1,15 @@
-# Zenvio Elixir SDK
+# Notifique Elixir SDK
 
-SDK oficial Zenvio para Elixir — WhatsApp, SMS, Email e envio por template (messages).
+SDK oficial Notifique para Elixir — WhatsApp, SMS, Email, Push e envio por template.
 
 ## Instalação
 
-Adicione no `mix.exs`:
+No `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:zenvio, "~> 0.2.0"}
+    {:notifique, "~> 0.2.0"}
   ]
 end
 ```
@@ -17,12 +17,11 @@ end
 ## Uso rápido
 
 ```elixir
-client = Zenvio.new("sua-api-key")
+client = Notifique.new("sua-api-key")
 instance_id = "sua-instancia-whatsapp"
 
-# WhatsApp — texto
-case Zenvio.Whatsapp.send_text(client, instance_id, "5511999999999", "Olá pelo Elixir!") do
-  {:ok, body} -> IO.inspect(body["message_ids"])
+case Notifique.Whatsapp.send_text(client, instance_id, ["5511999999999"], "Olá!") do
+  {:ok, body} -> IO.inspect(body["data"]["messageIds"])
   {:error, %{status: code, body: body}} -> IO.puts("API erro #{code}: #{inspect(body)}")
   {:error, reason} -> IO.puts("Erro: #{inspect(reason)}")
 end
@@ -30,85 +29,32 @@ end
 
 ## WhatsApp
 
-- **POST /v1/whatsapp/messages** — `Zenvio.Whatsapp.send(client, instance_id, params)` ou `send_text(client, instance_id, to, text)`
-- **GET/DELETE/PATCH/POST** — `get_message`, `delete_message`, `edit_message`, `cancel_message`
-- **Instâncias** — `list_instances`, `get_instance`, `create_instance`, `disconnect_instance`, `delete_instance`
-
-Todos retornam `{:ok, body}` ou `{:error, %{status: code, body: body}}` em 4xx/5xx.
-
-```elixir
-# Texto
-{:ok, resp} = Zenvio.Whatsapp.send_text(client, instance_id, ["5511999999999"], "Oi")
-
-# Com params
-params = %{
-  "to" => ["5511999999999"],
-  "type" => "image",
-  "payload" => %{"media_url" => "https://exemplo.com/img.png"}
-}
-{:ok, resp} = Zenvio.Whatsapp.send(client, instance_id, params)
-
-# Status da mensagem
-{:ok, status} = Zenvio.Whatsapp.get_message(client, "msg-123")
-```
+- `send`, `send_text` — retornam envelope `success`/`data`
+- `list_messages(client, params)` — GET /v1/whatsapp/messages
+- `get_message`, `get_instance_qr(client, instance_id)`
+- `delete_message`, `edit_message`, `cancel_message`
+- `list_instances`, `get_instance`, `create_instance`, `disconnect_instance`, `delete_instance`
 
 ## SMS
 
-```elixir
-{:ok, resp} = Zenvio.Sms.send(client, %{
-  "to" => ["5511999999999"],
-  "message" => "Seu código: 123"
-})
-# resp["data"]["sms_ids"]
-
-{:ok, status} = Zenvio.Sms.get(client, "sms-id")
-```
+- `Notifique.Sms.send(client, params)`, `get(client, id)`, `cancel(client, id)`
 
 ## Email
 
-```elixir
-{:ok, resp} = Zenvio.Email.send(client, %{
-  "from" => "noreply@seudominio.com",
-  "to" => ["cliente@email.com"],
-  "subject" => "Assunto",
-  "text" => "Corpo",
-  "html" => "<p>Corpo HTML</p>"
-})
-# resp["data"]["email_ids"]
+- `Notifique.Email.send(client, params)`, `get(client, id)`, `cancel(client, id)`
+- **Domínios** — `Notifique.EmailDomains.list(client)`, `create(client, %{"domain" => "..."})`, `get(client, id)`, `verify(client, id)`
 
-{:ok, status} = Zenvio.Email.get(client, "email-id")
-{:ok, _} = Zenvio.Email.cancel(client, "email-id")
-```
+## Push
+
+- **Apps** — `Notifique.Push.list_apps`, `get_app`, `create_app`, `update_app`, `delete_app`
+- **Devices** — `Notifique.Push.register_device`, `list_devices`, `get_device`, `delete_device`
+- **Messages** — `Notifique.Push.send_message`, `list_messages`, `get_message`, `cancel_message`
 
 ## Messages (template)
 
-Envio por template em múltiplos canais (whatsapp, sms, email).
+- `Notifique.Messages.send(client, params)` — canais whatsapp, sms, email
 
-```elixir
-{:ok, resp} = Zenvio.Messages.send(client, %{
-  "to" => ["5511999999999"],
-  "template" => "welcome",
-  "variables" => %{"name" => "João"},
-  "channels" => ["whatsapp", "sms"],
-  "instance_id" => "inst-whatsapp"
-})
-# resp["data"]["message_ids"], resp["data"]["sms_ids"], etc.
-```
+## Retornos
 
-## Erros
-
-Em 4xx/5xx o SDK retorna `{:error, %{status: code, body: body}}`, onde `body` é o JSON decodificado (quando for JSON).
-
-```elixir
-case Zenvio.Whatsapp.send_text(client, inst, to, "Hi") do
-  {:ok, body} -> # sucesso
-  {:error, %{status: 400, body: %{"error" => msg}}} -> # erro da API
-  {:error, reason} -> # falha de rede etc.
-end
-```
-
-## Requisitos
-
-- Elixir ~> 1.14
-- Req ~> 0.4
-- Jason ~> 1.4
+- `{:ok, body}` ou `{:error, %{status: code, body: body}}`.
+- Elixir ~> 1.14, Req ~> 0.4, Jason ~> 1.4
