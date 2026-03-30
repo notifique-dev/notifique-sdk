@@ -10,6 +10,6 @@ public record SmsSendResponse(
 public record SmsSendData(
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("count")] int? Count,
-    [property: JsonPropertyName("sms_ids")] List<string> SmsIds,
-    [property: JsonPropertyName("scheduled_at")] string? ScheduledAt = null
+    [property: JsonPropertyName("smsIds")] List<string> SmsIds,
+    [property: JsonPropertyName("scheduledAt")] string? ScheduledAt = null
 );

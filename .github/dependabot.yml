@@ -1,0 +1,49 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "node"]
+
+  - package-ecosystem: "pip"
+    directory: "/packages/sdk-python"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "python"]
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/sdk-go"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "go"]
+
+  - package-ecosystem: "maven"
+    directory: "/packages/sdk-java"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "java"]
+
+  - package-ecosystem: "nuget"
+    directory: "/packages/sdk-dotnet"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "dotnet"]
+
+  - package-ecosystem: "composer"
+    directory: "/packages/sdk-php"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "php"]
+
+  - package-ecosystem: "mix"
+    directory: "/packages/sdk-elixir"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "elixir"]

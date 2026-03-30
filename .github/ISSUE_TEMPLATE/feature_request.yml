@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest a new capability or improvement
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea.
+        Please describe the problem and proposal clearly.
+
+  - type: dropdown
+    id: sdk
+    attributes:
+      label: Target SDK
+      options:
+        - node
+        - python
+        - go
+        - java
+        - dotnet
+        - php
+        - elixir
+        - core/types
+        - api/contracts
+        - multiple
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      placeholder: What pain point are you trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: Describe your ideal API/behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact and compatibility
+      placeholder: Is this breaking? Which users are affected?

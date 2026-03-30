@@ -8,6 +8,6 @@ public record SmsCancelResponse(
 );
 
 public record SmsCancelData(
-    [property: JsonPropertyName("sms_id")] string SmsId,
+    [property: JsonPropertyName("smsId")] string SmsId,
     [property: JsonPropertyName("status")] string Status
 );

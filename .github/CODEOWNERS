@@ -1,0 +1,18 @@
+# Global owners
+* @thesanchesoficial
+
+# Repository governance
+.github/ @thesanchesoficial
+
+# Shared contracts/types
+/packages/core/ @thesanchesoficial
+/packages/api/ @thesanchesoficial
+
+# SDK ownership
+/packages/sdk-node/ @thesanchesoficial
+/packages/sdk-python/ @thesanchesoficial
+/packages/sdk-go/ @thesanchesoficial
+/packages/sdk-java/ @thesanchesoficial
+/packages/sdk-dotnet/ @thesanchesoficial
+/packages/sdk-php/ @thesanchesoficial
+/packages/sdk-elixir/ @thesanchesoficial
