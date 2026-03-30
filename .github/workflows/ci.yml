@@ -106,4 +106,4 @@ jobs:
         run: dotnet restore packages/sdk-dotnet/Notifique.sln
 
       - name: Test
-        run: dotnet test packages/sdk-dotnet/Notifique.sln --configuration Release --no-restore
+        run: dotnet test packages/sdk-dotnet/tests/Notifique.Tests/Notifique.Tests.csproj -c Release --no-restore
