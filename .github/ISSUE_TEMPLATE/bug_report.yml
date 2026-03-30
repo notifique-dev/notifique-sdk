@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a problem in one or more SDKs
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this bug.
+        Please fill all relevant fields so we can reproduce quickly.
+
+  - type: dropdown
+    id: sdk
+    attributes:
+      label: Affected SDK
+      options:
+        - node
+        - python
+        - go
+        - java
+        - dotnet
+        - php
+        - elixir
+        - core/types
+        - api/contracts
+        - multiple
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, runtime version, package version, etc.
