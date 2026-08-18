@@ -20,6 +20,10 @@ dependencies = [
 [tool.setuptools.package-data]
 notifique = ["operations.json", "generated/api.py", "generated/__init__.py", "generated/models/**/*"]
 
+[project.urls]
+Homepage = "https://docs.notifique.dev"
+Repository = "https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-python"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",

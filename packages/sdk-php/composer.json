@@ -3,6 +3,11 @@
     "description": "SDK oficial Notifique para PHP",
     "version": "0.2.1",
     "license": "MIT",
+    "homepage": "https://docs.notifique.dev",
+    "support": {
+        "source": "https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-php",
+        "issues": "https://github.com/notifique-dev/notifique-sdk/issues"
+    },
     "authors": [
         {
             "name": "Notifique",

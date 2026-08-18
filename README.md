@@ -12,7 +12,7 @@ Documentação: [docs.notifique.dev](https://docs.notifique.dev)
 |-----------|--------|-------------------|
 | Node.js / TypeScript | `@notifique/core`, `@notifique/sdk-node` | 353 ops (`client.api` + namespaces) |
 | Python | `notifique-sdk` | 353 ops (`client.api`) |
-| Go | `github.com/notifique/notifique-sdk-go` | 353 ops (`client.API()`) |
+| Go | `github.com/notifique-dev/notifique-sdk/packages/sdk-go` | 353 ops (`client.Api`) |
 | Java | `com.notifique:notifique-sdk` | 353 ops (`client.api`) |
 | .NET | `Notifique` | 353 ops (`client.Api`) |
 | PHP | `notifique/notifique-sdk-php` | 353 ops (`$client->api`) |
@@ -111,7 +111,7 @@ cd packages/sdk-elixir && mix test
 
 ## Versão
 
-Monorepo alinhado em **0.2.0** (mesma linha dos push SDKs).
+Monorepo alinhado em **0.2.1** (mesma linha dos push SDKs).
 
 ## Segurança
 

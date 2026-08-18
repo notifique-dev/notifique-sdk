@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/notifique/notifique-sdk-go/openapimodels"
+	"github.com/notifique-dev/notifique-sdk/packages/sdk-go/openapimodels"
 )
 type TypedAPI struct { client *Notifique }
 

@@ -1,359 +1,299 @@
 # Notifique .NET SDK
 
-Official Notifique SDK for .NET — **v0.2.0** with full OpenAPI v1 coverage.
+Official Notifique SDK for .NET — **v0.2.1** with full OpenAPI v1 coverage (353 operations, 23 specs).
 
-Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-dotnet) · Docs: [docs.notifique.dev](https://docs.notifique.dev)
 
-## Full API coverage (v0.2.0)
+**Client-side push**: [notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
 
-- **353 operations** across **23 OpenAPI specs**
-- **Legacy namespaces** (typed shortcuts): `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
-- **Generated client**: `client.Api` — dynamic namespace tree from `operations.json`
-- **Access pattern**: `await client.Api.oauth.listWorkspaceApps()` or nested `client.Api.oauth.apps.rotateWorkspaceAppSecret(...)`
+---
 
-```csharp
-using Notifique.Generated;
+SDK oficial Notifique para .NET — **v0.2.1** com cobertura completa da API v1 OpenAPI (353 operações, 23 specs).
 
-dynamic api = client.Api;
+Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-dotnet) · Docs: [docs.notifique.dev](https://docs.notifique.dev)
 
-var contacts = await api.contacts.getV1Contacts(new ApiRequestOptions
-{
-    Query = new Dictionary<string, string> { ["limit"] = "20" }
-});
+**Push no dispositivo**: [notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este pacote cobre a **API server-side**.
 
-var automations = await api.automations.listAutomations();
+## Installation
 
-await api.oauth.apps.rotateWorkspaceAppSecret(
-    new Dictionary<string, string> { ["id"] = "app-id" },
-    ApiRequestOptions.Empty);
-```
-
-Regenerate bindings from [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (monorepo root).
-
-OpenAPI schemas are available via `@notifique/core` (TypeScript); .NET uses generated operation records from the same registry.
-
-**Client-side push**: [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
-
-## Requirements
-
-- .NET 8.0 ou superior
-- Sem dependências externas (apenas `System.Text.Json`)
-
-## Instalação
-
-### NuGet
-```
-Install-Package Notifique
-```
-
-### .NET CLI
 ```bash
 dotnet add package Notifique
 ```
 
-## Uso rápido
+## Instalação
 
-Recomendado: use `NotifiqueClient` com a base URL atual (`https://api.notifique.dev/v1`).
+```bash
+dotnet add package Notifique
+```
+
+Requirements: .NET 8.0+, no external dependencies.
+
+Requisitos: .NET 8.0+, sem dependências externas.
+
+## Quick start
+
+```csharp
+using Notifique;
+
+var client = new NotifiqueClient("your-api-key");
+var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello!");
+Console.WriteLine(string.Join(", ", response.Data.MessageIds));
+```
+
+## Início rápido
 
 ```csharp
 using Notifique;
 
 var client = new NotifiqueClient("sua-api-key");
-
-// Enviar mensagem de texto WhatsApp
 var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Olá!");
-
-Console.WriteLine($"Status: {response.Data.Status}");
-Console.WriteLine($"Message IDs: {string.Join(", ", response.Data.MessageIds)}");
+Console.WriteLine(string.Join(", ", response.Data.MessageIds));
 ```
 
-Base URL padrão: `https://api.notifique.dev/v1`.
-
-## WhatsApp
-
-### Send Text Message
-
-```csharp
-// Single recipient
-var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello!");
-
-// Multiple recipients
-var response = await client.WhatsApp.SendTextAsync("instance-id",
-    new List<string> { "5511111111111", "5522222222222" }, "Hello everyone!");
-```
-
-### Send Media Message
-
-```csharp
-using Notifique.Models.WhatsApp;
-
-var parameters = new WhatsAppSendParams
-{
-    To = new List<string> { "5511999999999" },
-    Type = "image",
-    Payload = new MediaPayload(
-        MediaUrl: "https://example.com/image.png",
-        FileName: "image.png",
-        Mimetype: "image/png"
-    )
-};
-
-var response = await client.WhatsApp.SendAsync("instance-id", parameters);
-```
-
-### Send Location
-
-```csharp
-var parameters = new WhatsAppSendParams
-{
-    To = new List<string> { "5511999999999" },
-    Type = "location",
-    Payload = new LocationPayload(
-        Latitude: -23.5505,
-        Longitude: -46.6333,
-        Name: "Sao Paulo",
-        Address: "Sao Paulo, Brazil"
-    )
-};
-
-var response = await client.WhatsApp.SendAsync("instance-id", parameters);
-```
-
-### Send Contact
-
-```csharp
-var parameters = new WhatsAppSendParams
-{
-    To = new List<string> { "5511999999999" },
-    Type = "contact",
-    Payload = new ContactPayload(new ContactInfo(
-        FullName: "John Doe",
-        PhoneNumber: "+55 11 99999-9999"
-    ))
-};
-
-var response = await client.WhatsApp.SendAsync("instance-id", parameters);
-```
-
-### Message Operations
-
-```csharp
-// List messages (GET /v1/whatsapp/messages)
-var list = await client.WhatsApp.ListMessagesAsync();
-var listFiltered = await client.WhatsApp.ListMessagesAsync(new Dictionary<string, string> { { "page", "1" }, { "limit", "20" } });
-
-// Get message status (retorna envelope com .Data)
-var response = await client.WhatsApp.GetMessageAsync("message-id");
-var status = response.Data;
-
-// QR da instância
-var qr = await client.WhatsApp.GetInstanceQrAsync("instance-id");
-
-// Edit a message
-var edited = await client.WhatsApp.EditMessageAsync("message-id", "Updated text");
-
-// Cancel a scheduled message
-var cancelled = await client.WhatsApp.CancelMessageAsync("message-id");
-
-// Delete a message
-var deleted = await client.WhatsApp.DeleteMessageAsync("message-id");
-```
-
-### Instance Management
-
-```csharp
-// List all instances
-var instances = await client.WhatsApp.ListInstancesAsync();
-
-// List with pagination
-var filtered = await client.WhatsApp.ListInstancesAsync(new Dictionary<string, string>
-{
-    { "page", "1" },
-    { "limit", "10" }
-});
-
-// Get a specific instance
-var instance = await client.WhatsApp.GetInstanceAsync("instance-id");
-
-// Create a new instance
-var created = await client.WhatsApp.CreateInstanceAsync("My Instance");
-
-// Disconnect an instance
-var disconnected = await client.WhatsApp.DisconnectInstanceAsync("instance-id");
-
-// Delete an instance
-var deleted = await client.WhatsApp.DeleteInstanceAsync("instance-id");
-```
-
-## SMS
-
-### Send SMS
+## Send SMS
 
 ```csharp
 using Notifique.Models.Sms;
 
-var parameters = new SmsSendParams
+await client.Sms.SendAsync(new SmsSendParams
 {
     To = new List<string> { "5511999999999" },
-    Message = "Hello via SMS!"
-};
-
-var response = await client.Sms.SendAsync(parameters);
+    Message = "Hello via SMS!",
+});
 ```
 
-### Get SMS Status
+## Enviar SMS
 
 ```csharp
-var status = await client.Sms.GetAsync("sms-id");
-Console.WriteLine($"Status: {status.Data.Status}");
+await client.Sms.SendAsync(new SmsSendParams
+{
+    To = new List<string> { "5511999999999" },
+    Message = "Olá via SMS!",
+});
 ```
 
-### Cancel SMS
+## Send messages by channel
+
+### WhatsApp
 
 ```csharp
-var cancelled = await client.Sms.CancelAsync("sms-id");
+await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello!");
 ```
 
-## Email
+### SMS
 
-### Send Email
+```csharp
+await client.Sms.SendAsync(new SmsSendParams { To = new List<string> { "5511999999999" }, Message = "SMS text" });
+```
+
+### Email
 
 ```csharp
 using Notifique.Models.Email;
 
-var parameters = new EmailSendParams
+await client.Email.SendAsync(new EmailSendParams
 {
     From = "noreply@yourdomain.com",
-    FromName = "Your App",
     To = new List<string> { "user@example.com" },
-    Subject = "Welcome!",
-    Html = "<h1>Hello!</h1><p>Welcome to our platform.</p>"
-};
-
-var response = await client.Email.SendAsync(parameters);
+    Subject = "Welcome",
+    Html = "<p>Hello!</p>",
+});
 ```
 
-### Get Email Status
-
-```csharp
-var status = await client.Email.GetAsync("email-id");
-```
-
-### Cancel Email
-
-```csharp
-var cancelled = await client.Email.CancelAsync("email-id");
-```
-
-### Email Domains
-
-```csharp
-using Notifique.Models.Email;
-
-var domains = await client.EmailDomains.ListAsync();
-var created = await client.EmailDomains.CreateAsync(new CreateEmailDomainRequest { Domain = "meudominio.com" });
-var one = await client.EmailDomains.GetAsync("domain-id");
-var verified = await client.EmailDomains.VerifyAsync("domain-id");
-// verified.Verified indica se o domínio passou na verificação DNS
-```
-
-## Push
-
-- **Apps** — `ListAppsAsync()`, `GetAppAsync(id)`, `CreateAppAsync(PushAppCreateRequest)`, `UpdateAppAsync(id, PushAppUpdateRequest)`, `DeleteAppAsync(id)`
-- **Devices** — `ListDevicesAsync()`, `GetDeviceAsync(id)`, `RegisterDeviceAsync(PushDeviceRegisterRequest)`, `DeleteDeviceAsync(id)`
-- **Messages** — `SendMessageAsync(SendPushRequest)`, `ListMessagesAsync()`, `GetMessageAsync(id)`, `CancelMessageAsync(id)`
-
-Canonical send contract: `to` + `type` + `payload` → `data.messageIds` (not `pushIds`, not `title`/`body` at root):
+### Push
 
 ```csharp
 using Notifique.Models.Push;
 
-var response = await client.Push.SendMessageAsync(new SendPushRequest
+await client.Push.SendMessageAsync(new SendPushRequest
 {
-    To = new List<string> { deviceId },
+    To = new List<string> { "device-id" },
     Type = "push",
     Payload = new Dictionary<string, object> { ["title"] = "Title", ["body"] = "Body" },
 });
-Console.WriteLine(string.Join(", ", response.Data.MessageIds));
 ```
 
-Scheduling uses `request.Schedule.SendAt` (**sendAt** in JSON).
-
-## Messages (Templates)
-
-### Send Template Message
+### Telegram
 
 ```csharp
-using Notifique.Models.Messages;
+await client.Api.Telegram.PostV1TelegramSendAsync(new Notifique.OpenApi.Models.Model.NtfTgSendTelegramMessageRequest
+{
+    InstanceId = "inst_abc",
+    To = new List<string> { "@username" },
+    Type = "text",
+    Payload = new Notifique.OpenApi.Models.Model.NtfTgSendTelegramMessageRequestPayload { Message = "Hello!" },
+});
+```
 
-var parameters = new MessagesSendParams
+### Instagram
+
+```csharp
+await client.Api.Instagram.SendMessageAsync(new Notifique.OpenApi.Models.Model.NtfIgSendMessageBody
+{
+    InstanceId = "inst_abc",
+    To = new List<string> { "target_user" },
+    Type = "text",
+    Payload = new Dictionary<string, object> { ["message"] = "Hello!" },
+});
+```
+
+### RCS
+
+```csharp
+await client.Api.Rcs.PostV1RcsSendAsync(new Notifique.OpenApi.Models.Model.NtfRcsSendRcsRequest
 {
     To = new List<string> { "5511999999999" },
-    Template = "welcome-template",
-    Variables = new Dictionary<string, object> { { "name", "User" } },
-    Channels = new List<string> { "whatsapp", "sms" },
-    InstanceId = "instance-id"
-};
-
-var response = await client.Messages.SendAsync(parameters);
+    Type = "basic",
+    Payload = new Dictionary<string, object> { ["message"] = "Hello RCS!" },
+});
 ```
 
-## Scheduling
-
-All send operations support scheduling via the `Schedule` property:
+### Voice
 
 ```csharp
-using Notifique.Models.Shared;
+await client.Api.Voice.PostV1VoiceCallsAsync(new Notifique.OpenApi.Models.Model.NtfVoiceCreateBody
+{
+    From = "5511987654321",
+    To = new List<string> { "5511999887766" },
+    Type = "speak",
+    Payload = new Dictionary<string, object> { ["text"] = "Hello! Test call.", ["voice"] = "female-natural" },
+});
+```
 
-var parameters = new SmsSendParams
+## Enviar mensagens por canal
+
+### WhatsApp
+
+```csharp
+await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Olá!");
+```
+
+### SMS
+
+```csharp
+await client.Sms.SendAsync(new SmsSendParams { To = new List<string> { "5511999999999" }, Message = "Texto SMS" });
+```
+
+### Email
+
+```csharp
+await client.Email.SendAsync(new EmailSendParams
+{
+    From = "noreply@seudominio.com",
+    To = new List<string> { "usuario@example.com" },
+    Subject = "Bem-vindo",
+    Html = "<p>Olá!</p>",
+});
+```
+
+### Push
+
+```csharp
+await client.Push.SendMessageAsync(new SendPushRequest
+{
+    To = new List<string> { "device-id" },
+    Type = "push",
+    Payload = new Dictionary<string, object> { ["title"] = "Título", ["body"] = "Corpo" },
+});
+```
+
+### Telegram
+
+```csharp
+await client.Api.Telegram.PostV1TelegramSendAsync(new Notifique.OpenApi.Models.Model.NtfTgSendTelegramMessageRequest
+{
+    InstanceId = "inst_abc",
+    To = new List<string> { "@usuario" },
+    Type = "text",
+    Payload = new Notifique.OpenApi.Models.Model.NtfTgSendTelegramMessageRequestPayload { Message = "Olá!" },
+});
+```
+
+### Instagram
+
+```csharp
+await client.Api.Instagram.SendMessageAsync(new Notifique.OpenApi.Models.Model.NtfIgSendMessageBody
+{
+    InstanceId = "inst_abc",
+    To = new List<string> { "usuario_alvo" },
+    Type = "text",
+    Payload = new Dictionary<string, object> { ["message"] = "Olá!" },
+});
+```
+
+### RCS
+
+```csharp
+await client.Api.Rcs.PostV1RcsSendAsync(new Notifique.OpenApi.Models.Model.NtfRcsSendRcsRequest
 {
     To = new List<string> { "5511999999999" },
-    Message = "Scheduled message",
-    Schedule = new Schedule { SendAt = "2025-12-31T23:59:00Z" }
-};
+    Type = "basic",
+    Payload = new Dictionary<string, object> { ["message"] = "Olá RCS!" },
+});
 ```
 
-## Error Handling
-
-All API errors throw a `NotifiqueApiException` with the HTTP status code and response body:
+### Voz
 
 ```csharp
-try
+await client.Api.Voice.PostV1VoiceCallsAsync(new Notifique.OpenApi.Models.Model.NtfVoiceCreateBody
 {
-    await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello");
-}
-catch (NotifiqueApiException ex)
+    From = "5511987654321",
+    To = new List<string> { "5511999887766" },
+    Type = "speak",
+    Payload = new Dictionary<string, object> { ["text"] = "Olá! Ligação de teste.", ["voice"] = "female-natural" },
+});
+```
+
+## Webhooks & logs
+
+```csharp
+using Notifique.Generated;
+
+await client.Api.Webhooks.ListWebhooksAsync(new ApiRequestOptions
 {
-    Console.WriteLine($"Status: {ex.StatusCode}");
-    Console.WriteLine($"Body: {ex.ResponseBody}");
-}
+    Query = new Dictionary<string, string> { ["page"] = "1", ["limit"] = "20" },
+});
+await client.Api.Logs.GetV1LogsAsync(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["page"] = "1", ["limit"] = "50" },
+});
+await client.Api.Logs.GetV1LogsByIdAsync("log-id", null);
+await client.Api.Webhooks.ListDeliveriesAsync(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["limit"] = "20" },
+});
 ```
 
-## Configuration
-
-### Custom Base URL
+## Webhooks e logs
 
 ```csharp
-var client = new NotifiqueClient("your-api-key", "https://custom-api.example.com/v1");
+await client.Api.Webhooks.ListWebhooksAsync(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["page"] = "1", ["limit"] = "20" },
+});
+await client.Api.Logs.GetV1LogsAsync(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["page"] = "1", ["limit"] = "50" },
+});
+await client.Api.Logs.GetV1LogsByIdAsync("log-id", null);
+await client.Api.Webhooks.ListDeliveriesAsync(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["limit"] = "20" },
+});
 ```
 
-### Dependency Injection (IHttpClientFactory)
+## Full API
 
-```csharp
-services.AddHttpClient("Notifique");
-var httpClient = httpClientFactory.CreateClient("Notifique");
-var client = new NotifiqueClient("your-api-key", "https://api.notifique.dev/v1", httpClient);
-```
+- **353 operations**, legacy `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
+- **Typed**: `client.Api.Telegram`, `client.Api.Webhooks`, …
+- Errors: `NotifiqueApiException`
 
-### CancellationToken Support
+Regenerate: `npm run generate` in monorepo root.
 
-All async methods accept an optional `CancellationToken`:
+## API completa
 
-```csharp
-using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-var response = await client.WhatsApp.SendTextAsync("instance-id", "5511999999999", "Hello", cts.Token);
-```
+- **353 operações**, legado `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
+- **Tipado**: `client.Api.Telegram`, `client.Api.Webhooks`, …
+- Erros: `NotifiqueApiException`
 
-## License
-
-MIT
+Regenerar: `npm run generate` na raiz do monorepo.

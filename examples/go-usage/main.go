@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/notifique/notifique-sdk-go"
+	notifique "github.com/notifique-dev/notifique-sdk/packages/sdk-go"
 	"os"
 )
 

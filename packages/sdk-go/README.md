@@ -1,116 +1,291 @@
 # Notifique Go SDK
 
-SDK oficial Notifique para Go — **v0.2.0** com cobertura completa da API v1 OpenAPI.
+Official Notifique SDK for Go — **v0.2.1** with full OpenAPI v1 coverage (353 operations, 23 specs).
 
-Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-go) · Docs: [docs.notifique.dev](https://docs.notifique.dev)
 
-## Cobertura completa da API (v0.2.0)
+**Client-side push**: [notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
 
-- **353 operações** em **23 specs** OpenAPI
-- **Namespaces legados** (atalhos tipados): `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
-- **Cliente gerado**: `client.API()` — árvore dinâmica a partir de `operations.json`
-- **Chamada por ID**: `client.API().Call("whatsapp.getV1WhatsappMessages", opts)`
-- **Navegação**: `ns, _ := client.API().Navigate("oauth", "apps"); ns.Call("rotateWorkspaceAppSecret", opts)`
+---
 
-```go
-api := client.API()
+SDK oficial Notifique para Go — **v0.2.1** com cobertura completa da API v1 OpenAPI (353 operações, 23 specs).
 
-// Por operation path
-_, err := api.Call("whatsapp.getV1WhatsappMessages", notifique.DynamicRequestOptions{
-    Query: map[string]string{"page": "1", "limit": "20"},
-})
+Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-go) · Docs: [docs.notifique.dev](https://docs.notifique.dev)
 
-// Por namespace
-oauthApps, err := api.Navigate("oauth", "apps")
-_, err = oauthApps.Call("rotateWorkspaceAppSecret", notifique.DynamicRequestOptions{
-    PathParams: map[string]string{"id": "app-id"},
-})
+**Push no dispositivo**: [notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este pacote cobre a **API server-side**.
+
+## Installation
+
+```bash
+go get github.com/notifique-dev/notifique-sdk/packages/sdk-go@v0.2.1
 ```
 
-Regenerar bindings a partir de [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (na raiz do monorepo).
-
-**Push no dispositivo** (Web/RN/Flutter/Android/iOS): [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este pacote cobre a **API server-side**.
+Module path: `github.com/notifique-dev/notifique-sdk/packages/sdk-go`
 
 ## Instalação
 
 ```bash
-go get github.com/notifique/notifique-sdk-go
+go get github.com/notifique-dev/notifique-sdk/packages/sdk-go@v0.2.1
 ```
 
-## Uso rápido
+Módulo: `github.com/notifique-dev/notifique-sdk/packages/sdk-go`
+
+## Quick start
 
 ```go
-package main
-
 import (
 	"fmt"
-	"github.com/notifique/notifique-sdk-go"
+	notifique "github.com/notifique-dev/notifique-sdk/packages/sdk-go"
 )
 
-func main() {
-	// NewClient panics on empty key; use NewClientWithConfig for error-returning variant.
-	client := notifique.NewClient("your-api-key") // default base URL: https://api.notifique.dev/v1
+client := notifique.NewClient("your-api-key")
 
-	// Or with explicit error handling:
-	// client, err := notifique.NewClientWithConfig(notifique.Config{APIKey: "...", BaseURL: "..."})
-	// if err != nil { log.Fatal(err) }
-	instanceID := "sua-instancia-whatsapp"
-	to := []string{"5511999999999"}
-
-	// WhatsApp — Send/SendText retornam envelope; use .Data para message_ids
-	resp, err := client.WhatsApp.SendText(instanceID, to, "Olá!")
-	if err != nil {
-		if apiErr, ok := err.(*notifique.APIError); ok {
-			fmt.Printf("API erro %d: %s\n", apiErr.Code, apiErr.Body)
-			return
-		}
-		panic(err)
-	}
-	fmt.Printf("Enviado: %v\n", resp.Data.MessageIDs)
+resp, err := client.WhatsApp.SendText("instance-id", []string{"5511999999999"}, "Hello!")
+if err != nil {
+	panic(err)
 }
-```
-
-## WhatsApp
-
-- **POST /v1/whatsapp/messages** — `Send(instanceID, params)` / `SendText(instanceID, to, text)` → `*WhatsAppSendEnvelope` (use `.Data`)
-- **GET /v1/whatsapp/messages** — `ListMessages(params)`
-- **GET /v1/whatsapp/messages/:id** — `GetMessage(id)` → `*WhatsAppMessageEnvelope` (use `.Data`)
-- **GET /v1/whatsapp/instances/:id/qr** — `GetInstanceQr(instanceID)`
-- Delete, Edit, Cancel, ListInstances, GetInstance, CreateInstance, Disconnect, DeleteInstance
-
-## SMS
-
-- `Send(params)`, `Get(id)`, `Cancel(id)`
-
-## Email
-
-- `Send(params)`, `Get(id)`, `Cancel(id)`
-- **Domínios** — `client.Email.Domains().List()`, `Create(req)`, `Get(id)`, `Verify(id)`
-
-## Push
-
-- **Apps** — `client.Push.Apps.List(params)`, `Get(id)`, `Create(name)`, `Update(id, body)`, `Delete(id)`
-- **Devices** — `client.Push.Devices.Register(params)`, `List(params)`, `Get(id)`, `Delete(id)`
-- **Messages** — `client.Push.Messages.Send(params)`, `List(params)`, `Get(id)`, `Cancel(id)`
-
-Contrato canônico de envio (`SendPushParams`): `to` + `type` (`push` ou `template`) + `payload` → resposta com `data.messageIds` (não `pushIds`):
-
-```go
-resp, err := client.Push.Messages.Send(notifique.SendPushParams{
-    To:   []string{deviceID},
-    Type: "push",
-    Payload: map[string]any{"title": "Título", "body": "Corpo"},
-})
 fmt.Println(resp.Data.MessageIDs)
 ```
 
-## Messages (template)
+## Início rápido
 
-- `client.Messages.Send(params)` — canais whatsapp, sms, email
+```go
+import (
+	"fmt"
+	notifique "github.com/notifique-dev/notifique-sdk/packages/sdk-go"
+)
 
-## Compatibilidade
+client := notifique.NewClient("sua-api-key")
 
-- `notifique.Client` é alias de `notifique.Notifique`; `NewClient` retorna `*Notifique`.
-- Em 4xx/5xx o SDK retorna `*notifique.APIError` com `Code` e `Body`.
-- `NewClientWithConfig` exige `BaseURL` HTTPS por padrão (`AllowInsecureHTTP` existe apenas para cenários controlados de teste/local).
+resp, err := client.WhatsApp.SendText("instance-id", []string{"5511999999999"}, "Olá!")
+if err != nil {
+	panic(err)
+}
+fmt.Println(resp.Data.MessageIDs)
+```
+
+## Send SMS
+
+```go
+resp, err := client.Sms.Send(notifique.SmsSendParams{
+	To:      []string{"5511999999999"},
+	Message: "Hello via SMS!",
+})
+```
+
+## Enviar SMS
+
+```go
+resp, err := client.Sms.Send(notifique.SmsSendParams{
+	To:      []string{"5511999999999"},
+	Message: "Olá via SMS!",
+})
+```
+
+## Send messages by channel
+
+Eight channels. Legacy shortcuts plus typed `client.Api.*` for all OpenAPI operations.
+
+### WhatsApp
+
+```go
+client.WhatsApp.SendText("instance-id", []string{"5511999999999"}, "Hello!")
+```
+
+### SMS
+
+```go
+client.Sms.Send(notifique.SmsSendParams{To: []string{"5511999999999"}, Message: "SMS text"})
+```
+
+### Email
+
+```go
+client.Email.Send(notifique.EmailSendParams{
+	From:    "noreply@yourdomain.com",
+	To:      []string{"user@example.com"},
+	Subject: "Welcome",
+	Html:    "<p>Hello!</p>",
+})
+```
+
+### Push
+
+```go
+client.Push.Messages.Send(notifique.SendPushParams{
+	To:      []string{"device-id"},
+	Type:    "push",
+	Payload: map[string]any{"title": "Title", "body": "Body"},
+})
+```
+
+### Telegram
+
+```go
+import "github.com/notifique-dev/notifique-sdk/packages/sdk-go/openapimodels"
+
+msg := "Hello!"
+client.Api.Telegram().PostV1TelegramSend(&openapimodels.NtfTgSendTelegramMessageRequest{
+	InstanceId: "inst_abc",
+	To:         []string{"@username"},
+	Type:       "text",
+	Payload:    openapimodels.NtfTgSendTelegramMessageRequestPayload{Message: &msg},
+}, nil)
+```
+
+### Instagram
+
+```go
+client.Api.Instagram().SendMessage(&openapimodels.NtfIgSendMessageBody{
+	InstanceId: "inst_abc",
+	To:         []string{"target_user"},
+	Type:       "text",
+	Payload:    map[string]any{"message": "Hello!"},
+}, nil)
+```
+
+### RCS
+
+```go
+client.Api.Rcs().PostV1RcsSend(&openapimodels.NtfRcsSendRcsRequest{
+	To:      []string{"5511999999999"},
+	Type:    "basic",
+	Payload: map[string]any{"message": "Hello RCS!"},
+}, nil)
+```
+
+### Voice
+
+```go
+client.Api.Voice().PostV1VoiceCalls(&openapimodels.NtfVoiceCreateBody{
+	From:    "5511987654321",
+	To:      []string{"5511999887766"},
+	Type:    "speak",
+	Payload: map[string]any{"text": "Hello! Test call.", "voice": "female-natural"},
+}, nil)
+```
+
+## Enviar mensagens por canal
+
+Oito canais. Atalhos legados e `client.Api.*` tipado para todas as operações OpenAPI.
+
+### WhatsApp
+
+```go
+client.WhatsApp.SendText("instance-id", []string{"5511999999999"}, "Olá!")
+```
+
+### SMS
+
+```go
+client.Sms.Send(notifique.SmsSendParams{To: []string{"5511999999999"}, Message: "Texto SMS"})
+```
+
+### Email
+
+```go
+client.Email.Send(notifique.EmailSendParams{
+	From:    "noreply@seudominio.com",
+	To:      []string{"usuario@example.com"},
+	Subject: "Bem-vindo",
+	Html:    "<p>Olá!</p>",
+})
+```
+
+### Push
+
+```go
+client.Push.Messages.Send(notifique.SendPushParams{
+	To:      []string{"device-id"},
+	Type:    "push",
+	Payload: map[string]any{"title": "Título", "body": "Corpo"},
+})
+```
+
+### Telegram
+
+```go
+msg := "Olá!"
+client.Api.Telegram().PostV1TelegramSend(&openapimodels.NtfTgSendTelegramMessageRequest{
+	InstanceId: "inst_abc",
+	To:         []string{"@usuario"},
+	Type:       "text",
+	Payload:    openapimodels.NtfTgSendTelegramMessageRequestPayload{Message: &msg},
+}, nil)
+```
+
+### Instagram
+
+```go
+client.Api.Instagram().SendMessage(&openapimodels.NtfIgSendMessageBody{
+	InstanceId: "inst_abc",
+	To:         []string{"usuario_alvo"},
+	Type:       "text",
+	Payload:    map[string]any{"message": "Olá!"},
+}, nil)
+```
+
+### RCS
+
+```go
+client.Api.Rcs().PostV1RcsSend(&openapimodels.NtfRcsSendRcsRequest{
+	To:      []string{"5511999999999"},
+	Type:    "basic",
+	Payload: map[string]any{"message": "Olá RCS!"},
+}, nil)
+```
+
+### Voz
+
+```go
+client.Api.Voice().PostV1VoiceCalls(&openapimodels.NtfVoiceCreateBody{
+	From:    "5511987654321",
+	To:      []string{"5511999887766"},
+	Type:    "speak",
+	Payload: map[string]any{"text": "Olá! Ligação de teste.", "voice": "female-natural"},
+}, nil)
+```
+
+## Webhooks & logs
+
+```go
+client.Api.Webhooks().ListWebhooks(nil, nil, nil) // page, limit
+client.Api.Logs().GetV1Logs(nil, nil, nil, nil, nil, nil, nil, nil)
+client.Api.Logs().GetV1LogsById("log-id", nil)
+client.Api.Webhooks().ListDeliveries(nil, nil, nil, nil, nil, nil)
+```
+
+## Webhooks e logs
+
+```go
+client.Api.Webhooks().ListWebhooks(nil, nil, nil)
+client.Api.Logs().GetV1Logs(nil, nil, nil, nil, nil, nil, nil, nil)
+client.Api.Logs().GetV1LogsById("log-id", nil)
+client.Api.Webhooks().ListDeliveries(nil, nil, nil, nil, nil, nil)
+```
+
+## Full API
+
+- `client.Api` — typed tree (353 ops)
+- `client.API()` / `client.DynamicAPI()` — dynamic `Call("telegram.postV1TelegramSend", opts)`
+- Legacy: `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
 - Go 1.20+
+
+Regenerate: `npm run generate` in monorepo root (requires [notifique-docs](https://github.com/notifique-dev/notifique-docs)).
+
+## API completa
+
+- `client.Api` — árvore tipada (353 ops)
+- `client.API()` / `client.DynamicAPI()` — dinâmico `Call("telegram.postV1TelegramSend", opts)`
+- Legado: `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
+- Go 1.20+
+
+Regenerar: `npm run generate` na raiz do monorepo (requer [notifique-docs](https://github.com/notifique-dev/notifique-docs)).
+
+## Errors
+
+On 4xx/5xx the SDK returns `*notifique.APIError` with `Code` and `Body`.
+
+## Erros
+
+Em 4xx/5xx o SDK retorna `*notifique.APIError` com `Code` e `Body`.

@@ -2,6 +2,6 @@ module notifique-go-example
 
 go 1.20
 
-require github.com/notifique/notifique-sdk-go v0.1.0
+require github.com/notifique-dev/notifique-sdk/packages/sdk-go v0.2.1
 
-replace github.com/notifique/notifique-sdk-go => ../../packages/sdk-go
+replace github.com/notifique-dev/notifique-sdk/packages/sdk-go => ../../packages/sdk-go

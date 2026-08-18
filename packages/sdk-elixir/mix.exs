@@ -32,7 +32,7 @@ defmodule Notifique.MixProject do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/notifique/notifique-sdk"}
+      links: %{"GitHub" => "https://github.com/notifique-dev/notifique-sdk/tree/main/packages/sdk-elixir"}
     ]
   end
 end

@@ -9,7 +9,7 @@
     <Authors>Notifique</Authors>
     <Description>SDK oficial Notifique para .NET — WhatsApp, SMS, Email, Push e templates</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/notifique/notifique-sdk</RepositoryUrl>
+    <RepositoryUrl>https://github.com/notifique-dev/notifique-sdk</RepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 

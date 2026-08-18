@@ -1,4 +1,4 @@
-module github.com/notifique/notifique-sdk-go
+module github.com/notifique-dev/notifique-sdk/packages/sdk-go
 
 go 1.20
 
