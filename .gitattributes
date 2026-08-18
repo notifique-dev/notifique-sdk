@@ -1,0 +1,12 @@
+# Composer/Packagist dist — ship PHP package only (not the whole monorepo).
+packages/core export-ignore
+packages/sdk-node export-ignore
+packages/sdk-go export-ignore
+packages/sdk-java export-ignore
+packages/sdk-dotnet export-ignore
+packages/sdk-elixir export-ignore
+
+/examples export-ignore
+/scripts export-ignore
+/openapi export-ignore
+/tmp export-ignore

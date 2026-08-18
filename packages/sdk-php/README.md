@@ -14,6 +14,8 @@ Server-side Notifique SDK for PHP (v0.2.1).
 composer require notifique/notifique-sdk-php
 ```
 
+Packagist repo URL (monorepo root only): `https://github.com/notifique-dev/notifique-sdk`
+
 ### Quick start
 
 ```php
@@ -65,6 +67,10 @@ SDK server-side Notifique para PHP (v0.2.1).
 ```bash
 composer require notifique/notifique-sdk-php
 ```
+
+O pacote PHP está na raiz do monorepo (`composer.json` na raiz aponta a `packages/sdk-php/`). No Packagist, use apenas:
+
+`https://github.com/notifique-dev/notifique-sdk`
 
 ### Início rápido
 
