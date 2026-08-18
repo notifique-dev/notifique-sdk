@@ -689,7 +689,8 @@ function emitElixirTypedApi(tree, helpers) {
       if (pathParams.length === 1) {
         parts.push(`${sp}  opts = Keyword.put(opts, :path_params, %{"${pathParams[0]}" => ${pathParams[0]}})`);
       } else if (pathParams.length > 1) {
-        parts.push(`${sp}  opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))`);
+        const pathMap = pathParams.map((p) => `"${p}" => ${p}`).join(', ');
+        parts.push(`${sp}  opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{${pathMap}}))`);
       }
 
       for (const qp of op.queryParams ?? []) {
@@ -756,7 +757,7 @@ export function writeTypedApiSurfaces({ root, tree, operations, helpers }) {
   const pyModelsDir = path.join(root, 'packages/sdk-python/notifique/generated/models/models');
   const goModels = discoverGoModels(path.join(root, 'packages/sdk-go/openapimodels'));
   const javaModels = discoverJavaModels(
-    path.join(root, 'packages/sdk-java/src/main/java/com/notifique/sdk/openapi/models'),
+    path.join(root, 'packages/sdk-java/src/main/java/dev/notifique/sdk/openapi/models'),
   );
   const csModels = discoverCsharpModels(path.join(root, 'packages/sdk-dotnet/src/Notifique/OpenApi/Models'));
   const h = {
@@ -772,7 +773,7 @@ export function writeTypedApiSurfaces({ root, tree, operations, helpers }) {
   fs.writeFileSync(path.join(root, 'packages/sdk-python/notifique/generated/__init__.py'), '');
   fs.writeFileSync(path.join(root, 'packages/sdk-go/typed_api.go'), emitGoTypedApi(tree, h));
   fs.writeFileSync(
-    path.join(root, 'packages/sdk-java/src/main/java/com/notifique/sdk/generated/TypedGeneratedApi.java'),
+    path.join(root, 'packages/sdk-java/src/main/java/dev/notifique/sdk/generated/TypedGeneratedApi.java'),
     emitJavaTypedApi(tree, h)
   );
   fs.writeFileSync(

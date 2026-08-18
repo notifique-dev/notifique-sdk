@@ -448,7 +448,7 @@ defmodule Notifique.TypedApi do
 
     @spec assistants_delete_http_binding(Assistants.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoAssistantsDeleteHttpBindingResponse.t()} | {:error, term()}
     def assistants_delete_http_binding(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, bindingId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "bindingId" => bindingId}))
       case Notifique.DynamicApi.call_operation(client, "assistants.assistantsDeleteHttpBinding", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoAssistantsDeleteHttpBindingResponse", body)}
         error -> error
@@ -484,7 +484,7 @@ defmodule Notifique.TypedApi do
 
     @spec assistants_delete_mcp_binding(Assistants.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoAssistantsDeleteMcpBindingResponse.t()} | {:error, term()}
     def assistants_delete_mcp_binding(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, bindingId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "bindingId" => bindingId}))
       case Notifique.DynamicApi.call_operation(client, "assistants.assistantsDeleteMcpBinding", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoAssistantsDeleteMcpBindingResponse", body)}
         error -> error
@@ -493,7 +493,7 @@ defmodule Notifique.TypedApi do
 
     @spec assistants_update_mcp_binding(Assistants.t(), String.t(), String.t(), body: term() | nil, idempotency_key: String.t() | nil, opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoAssistantsUpdateMcpBindingResponse.t()} | {:error, term()}
     def assistants_update_mcp_binding(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, bindingId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "bindingId" => bindingId}))
       case Notifique.DynamicApi.call_operation(client, "assistants.assistantsUpdateMcpBinding", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoAssistantsUpdateMcpBindingResponse", body)}
         error -> error
@@ -602,7 +602,7 @@ defmodule Notifique.TypedApi do
 
     @spec get_run(Automations.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoGetRunResponse.t()} | {:error, term()}
     def get_run(%__MODULE__{api: %Notifique.TypedApi{client: client}}, automationId, runId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"automationId" => automationId, "runId" => runId}))
       case Notifique.DynamicApi.call_operation(client, "automations.getRun", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoGetRunResponse", body)}
         error -> error
@@ -1201,7 +1201,7 @@ defmodule Notifique.TypedApi do
 
       @spec delete_v1_forms_subscription(Lists.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAddonsDeleteV1FormsSubscriptionResponse.t()} | {:error, term()}
       def delete_v1_forms_subscription(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, subscriptionId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "subscriptionId" => subscriptionId}))
         case Notifique.DynamicApi.call_operation(client, "forms.lists.deleteV1FormsSubscription", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAddonsDeleteV1FormsSubscriptionResponse", body)}
           error -> error
@@ -1680,7 +1680,7 @@ defmodule Notifique.TypedApi do
 
     @spec kb_delete_doc(KnowledgeBases.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoKbDeleteDocResponse.t()} | {:error, term()}
     def kb_delete_doc(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, docId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "docId" => docId}))
       case Notifique.DynamicApi.call_operation(client, "knowledgeBases.kbDeleteDoc", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoKbDeleteDocResponse", body)}
         error -> error
@@ -1689,7 +1689,7 @@ defmodule Notifique.TypedApi do
 
     @spec kb_get_doc(KnowledgeBases.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoKbGetDocResponse.t()} | {:error, term()}
     def kb_get_doc(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, docId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "docId" => docId}))
       case Notifique.DynamicApi.call_operation(client, "knowledgeBases.kbGetDoc", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoKbGetDocResponse", body)}
         error -> error
@@ -1698,7 +1698,7 @@ defmodule Notifique.TypedApi do
 
     @spec kb_update_doc(KnowledgeBases.t(), String.t(), String.t(), body: term() | nil, idempotency_key: String.t() | nil, opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfAutoKbUpdateDocResponse.t()} | {:error, term()}
     def kb_update_doc(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, docId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "docId" => docId}))
       case Notifique.DynamicApi.call_operation(client, "knowledgeBases.kbUpdateDoc", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfAutoKbUpdateDocResponse", body)}
         error -> error
@@ -2332,7 +2332,7 @@ defmodule Notifique.TypedApi do
 
       @spec cancel_invite(Workspaces.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPlatformCancelInviteResponse.t()} | {:error, term()}
       def cancel_invite(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, inviteId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "inviteId" => inviteId}))
         case Notifique.DynamicApi.call_operation(client, "platform.workspaces.cancelInvite", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPlatformCancelInviteResponse", body)}
           error -> error
@@ -2352,7 +2352,7 @@ defmodule Notifique.TypedApi do
 
       @spec remove_member(Workspaces.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPlatformRemoveMemberResponse.t()} | {:error, term()}
       def remove_member(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, userId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "userId" => userId}))
         case Notifique.DynamicApi.call_operation(client, "platform.workspaces.removeMember", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPlatformRemoveMemberResponse", body)}
           error -> error
@@ -2379,7 +2379,7 @@ defmodule Notifique.TypedApi do
 
       @spec delete_payment_method(Workspaces.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPlatformDeletePaymentMethodResponse.t()} | {:error, term()}
       def delete_payment_method(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, pmId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "pmId" => pmId}))
         case Notifique.DynamicApi.call_operation(client, "platform.workspaces.deletePaymentMethod", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPlatformDeletePaymentMethodResponse", body)}
           error -> error
@@ -2388,7 +2388,7 @@ defmodule Notifique.TypedApi do
 
       @spec update_payment_method(Workspaces.t(), String.t(), String.t(), body: term() | nil, idempotency_key: String.t() | nil, opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPlatformUpdatePaymentMethodResponse.t()} | {:error, term()}
       def update_payment_method(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, pmId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "pmId" => pmId}))
         case Notifique.DynamicApi.call_operation(client, "platform.workspaces.updatePaymentMethod", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPlatformUpdatePaymentMethodResponse", body)}
           error -> error
@@ -2805,7 +2805,7 @@ defmodule Notifique.TypedApi do
 
     @spec delete_member(SendingPools.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPoolDeleteMemberResponse.t()} | {:error, term()}
     def delete_member(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, memberId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "memberId" => memberId}))
       case Notifique.DynamicApi.call_operation(client, "sendingPools.deleteMember", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPoolDeleteMemberResponse", body)}
         error -> error
@@ -2814,7 +2814,7 @@ defmodule Notifique.TypedApi do
 
     @spec update_member(SendingPools.t(), String.t(), String.t(), body: term() | nil, idempotency_key: String.t() | nil, opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfPoolUpdateMemberResponse.t()} | {:error, term()}
     def update_member(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, memberId, opts \\ []) do
-      opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+      opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "memberId" => memberId}))
       case Notifique.DynamicApi.call_operation(client, "sendingPools.updateMember", opts) do
         {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfPoolUpdateMemberResponse", body)}
         error -> error
@@ -3565,7 +3565,7 @@ defmodule Notifique.TypedApi do
 
       @spec post_v1_voice_calls_action(Calls.t(), String.t(), String.t(), body: Notifique.OpenApi.Model.NtfVoiceActionBody.t() | nil, idempotency_key: String.t() | nil, opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfVoicePostV1VoiceCallsActionResponse.t()} | {:error, term()}
       def post_v1_voice_calls_action(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, action, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "action" => action}))
         case Notifique.DynamicApi.call_operation(client, "voice.calls.postV1VoiceCallsAction", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfVoicePostV1VoiceCallsActionResponse", body)}
           error -> error
@@ -3574,7 +3574,7 @@ defmodule Notifique.TypedApi do
 
       @spec get_v1_voice_recording_download(Calls.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfVoiceGetV1VoiceRecordingDownloadResponse.t()} | {:error, term()}
       def get_v1_voice_recording_download(%__MODULE__{api: %Notifique.TypedApi{client: client}}, id, recordingId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"id" => id, "recordingId" => recordingId}))
         case Notifique.DynamicApi.call_operation(client, "voice.calls.getV1VoiceRecordingDownload", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfVoiceGetV1VoiceRecordingDownloadResponse", body)}
           error -> error
@@ -3920,7 +3920,7 @@ defmodule Notifique.TypedApi do
 
       @spec get_v1_whatsapp_instances_instance_id_groups_group_id_participants(Instances.t(), String.t(), String.t(), opts: keyword()) :: {:ok, Notifique.OpenApi.Model.NtfWaGetV1WhatsappInstancesInstanceIdGroupsGroupIdParticipantsResponse.t()} | {:error, term()}
       def get_v1_whatsapp_instances_instance_id_groups_group_id_participants(%__MODULE__{api: %Notifique.TypedApi{client: client}}, instanceId, groupId, opts \\ []) do
-        opts = Keyword.put(opts, :path_params, Keyword.get(opts, :path_params, %{}))
+        opts = Keyword.put(opts, :path_params, Map.merge(Keyword.get(opts, :path_params, %{}), %{"instanceId" => instanceId, "groupId" => groupId}))
         case Notifique.DynamicApi.call_operation(client, "whatsapp.instances.getV1WhatsappInstancesInstanceIdGroupsGroupIdParticipants", opts) do
           {:ok, body} -> {:ok, Notifique.OpenApi.Model.decode_response("NtfWaGetV1WhatsappInstancesInstanceIdGroupsGroupIdParticipantsResponse", body)}
           error -> error

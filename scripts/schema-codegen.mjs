@@ -30,8 +30,8 @@ function runGenerator(root, execSync, { generator, outRel, additionalProperties,
 }
 
 function writeJavaSupportingFiles(root, javaFullSrc) {
-  const sdkBase = path.join(root, 'packages/sdk-java/src/main/java/com/notifique/sdk');
-  const srcSdk = path.join(javaFullSrc, 'src/main/java/com/notifique/sdk');
+  const sdkBase = path.join(root, 'packages/sdk-java/src/main/java/dev/notifique/sdk');
+  const srcSdk = path.join(javaFullSrc, 'src/main/java/dev/notifique/sdk');
   const allow = new Set([
     'ApiClient.java',
     'ApiException.java',
@@ -217,9 +217,9 @@ export function generateOpenApiModels({ root, execSync }) {
     additionalProperties: javaModelProps,
     globalProperty: 'apiTests=false,modelTests=false,apiDocs=false',
   });
-  const javaOpenapi = path.join(root, 'packages/sdk-java/src/main/java/com/notifique/sdk/openapi');
+  const javaOpenapi = path.join(root, 'packages/sdk-java/src/main/java/dev/notifique/sdk/openapi');
   rmDir(javaOpenapi);
-  copyDir(path.join(javaOut, 'src/main/java/com/notifique/sdk/openapi/models'), path.join(javaOpenapi, 'models'));
+  copyDir(path.join(javaOut, 'src/main/java/dev/notifique/sdk/openapi/models'), path.join(javaOpenapi, 'models'));
   writeJavaSupportingFiles(root, javaFullOut);
 
   // C# models + Client helpers (Option, converters)
