@@ -40,6 +40,10 @@ type Notifique struct {
 	Email      *EmailNamespace
 	Messages   *MessagesNamespace
 	Push       *PushNamespace
+	// Api expõe todas as 353 operações OpenAPI com autocomplete (tipos openapimodels).
+	Api *TypedAPI
+	// DynamicApi acesso dinâmico bruto via Call() — usado internamente e em testes.
+	DynamicApi *DynamicAPI
 }
 
 // Client é alias para Notifique (deprecated).
@@ -104,7 +108,25 @@ func NewClientWithConfigSafe(config Config) (*Notifique, error) {
 	c.Email = &EmailNamespace{client: c}
 	c.Messages = &MessagesNamespace{client: c}
 	c.Push = newPushNamespace(c)
+	c.DynamicApi = newDynamicAPI(c, defaultRegistry)
+	c.Api = newTypedAPI(c)
 	return c, nil
+}
+
+// API retorna a API tipada com cobertura completa do OpenAPI.
+func (c *Notifique) API() *TypedAPI {
+	if c.Api == nil {
+		c.Api = newTypedAPI(c)
+	}
+	return c.Api
+}
+
+// DynamicAPI retorna o cliente dinâmico bruto (Call com path pontilhado).
+func (c *Notifique) DynamicAPI() *DynamicAPI {
+	if c.DynamicApi == nil {
+		c.DynamicApi = newDynamicAPI(c, defaultRegistry)
+	}
+	return c.DynamicApi
 }
 
 // SendOptions opções para requisições de envio (Email, SMS, Push, WhatsApp). IdempotencyKey envia o header Idempotency-Key (e x-idempotency-key) conforme OpenAPI.

@@ -1,8 +1,40 @@
 # Notifique .NET SDK
 
-SDK oficial Notifique para .NET — WhatsApp, SMS, Email, Push e mensagens por template.
+Official Notifique SDK for .NET — **v0.2.0** with full OpenAPI v1 coverage.
 
-## Requisitos
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Full API coverage (v0.2.0)
+
+- **353 operations** across **23 OpenAPI specs**
+- **Legacy namespaces** (typed shortcuts): `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
+- **Generated client**: `client.Api` — dynamic namespace tree from `operations.json`
+- **Access pattern**: `await client.Api.oauth.listWorkspaceApps()` or nested `client.Api.oauth.apps.rotateWorkspaceAppSecret(...)`
+
+```csharp
+using Notifique.Generated;
+
+dynamic api = client.Api;
+
+var contacts = await api.contacts.getV1Contacts(new ApiRequestOptions
+{
+    Query = new Dictionary<string, string> { ["limit"] = "20" }
+});
+
+var automations = await api.automations.listAutomations();
+
+await api.oauth.apps.rotateWorkspaceAppSecret(
+    new Dictionary<string, string> { ["id"] = "app-id" },
+    ApiRequestOptions.Empty);
+```
+
+Regenerate bindings from [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (monorepo root).
+
+OpenAPI schemas are available via `@notifique/core` (TypeScript); .NET uses generated operation records from the same registry.
+
+**Client-side push**: [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
+
+## Requirements
 
 - .NET 8.0 ou superior
 - Sem dependências externas (apenas `System.Text.Json`)
@@ -229,7 +261,23 @@ var verified = await client.EmailDomains.VerifyAsync("domain-id");
 
 - **Apps** — `ListAppsAsync()`, `GetAppAsync(id)`, `CreateAppAsync(PushAppCreateRequest)`, `UpdateAppAsync(id, PushAppUpdateRequest)`, `DeleteAppAsync(id)`
 - **Devices** — `ListDevicesAsync()`, `GetDeviceAsync(id)`, `RegisterDeviceAsync(PushDeviceRegisterRequest)`, `DeleteDeviceAsync(id)`
-- **Messages** — `SendMessageAsync(SendPushRequest)` (agendamento: `request.Schedule.SendAt` usa **sendAt** no JSON), `ListMessagesAsync()`, `GetMessageAsync(id)`, `CancelMessageAsync(id)` retorna `CancelPushResponse`
+- **Messages** — `SendMessageAsync(SendPushRequest)`, `ListMessagesAsync()`, `GetMessageAsync(id)`, `CancelMessageAsync(id)`
+
+Canonical send contract: `to` + `type` + `payload` → `data.messageIds` (not `pushIds`, not `title`/`body` at root):
+
+```csharp
+using Notifique.Models.Push;
+
+var response = await client.Push.SendMessageAsync(new SendPushRequest
+{
+    To = new List<string> { deviceId },
+    Type = "push",
+    Payload = new Dictionary<string, object> { ["title"] = "Title", ["body"] = "Body" },
+});
+Console.WriteLine(string.Join(", ", response.Data.MessageIds));
+```
+
+Scheduling uses `request.Schedule.SendAt` (**sendAt** in JSON).
 
 ## Messages (Templates)
 

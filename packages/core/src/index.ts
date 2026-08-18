@@ -373,11 +373,11 @@ export interface EmailSendParams {
   };
 }
 
-/** Resposta de envio e-mail (202). Padrão: status MAIÚSCULO, demais camelCase. */
+/** Resposta de envio e-mail (202). Padrão: status MAIÚSCULO, `data.messageIds` (spec OpenAPI). */
 export interface EmailSendResponse {
   success: boolean;
   data: {
-    emailIds: string[];
+    messageIds: string[];
     status: 'QUEUED' | 'SCHEDULED';
     count: number;
     scheduledAt?: string;
@@ -585,15 +585,36 @@ export interface PushDeviceSingleResponse {
 }
 
 export interface SendPushParams {
+  /** Device IDs (1–500). OpenAPI: NtfPush_SendPushRequest */
   to: string[];
+  type: 'push' | 'template';
+  payload: PushSendPayload | PushTemplatePayload;
+  schedule?: { sendAt: string };
+  options?: PushSendOptions;
+  metadata?: Record<string, unknown>;
+}
+
+/** Conteúdo livre quando type=push */
+export interface PushSendPayload {
   title?: string;
   body?: string;
   url?: string;
   icon?: string;
   image?: string;
+  badge?: string;
   data?: Record<string, unknown>;
-  schedule?: { sendAt: string };
-  options?: { priority?: 'high' | 'normal' | 'low' };
+}
+
+/** Conteúdo quando type=template */
+export interface PushTemplatePayload {
+  templateId: string;
+  variables?: Record<string, unknown>;
+}
+
+export interface PushSendOptions {
+  priority?: 'high' | 'normal' | 'low';
+  notification?: Record<string, unknown>;
+  webhook?: { url?: string; secret?: string };
 }
 
 export interface SendPushResponse {
@@ -601,8 +622,10 @@ export interface SendPushResponse {
   data: {
     status: 'QUEUED' | 'SCHEDULED';
     count: number;
-    pushIds: string[];
+    messageIds: string[];
     scheduledAt?: string;
+    localization?: Record<string, unknown>;
+    sandbox?: boolean;
   };
 }
 
@@ -653,5 +676,23 @@ export interface PushMessageSingleResponse {
 
 export interface CancelPushResponse {
   success: boolean;
-  data: { pushId: string; status: 'CANCELLED' };
+  data: { messageId: string; status: 'CANCELLED' };
 }
+
+/** OpenAPI-generated schemas from all 23 specs (components, paths, operations). */
+export * from './generated/schemas';
+
+/** Merged paths + helpers for typed `client.api` autocomplete. */
+export type {
+  ApiPaths,
+  HttpMethodLower,
+  OpFor,
+  OpResponse,
+  OpRequestBody,
+  OpQuery,
+  OpPathParams,
+} from './generated/api-paths';
+
+/** Common schema aliases (backward-compatible naming). */
+export type { WhatsappComponents as WhatsAppComponents } from './generated/schemas';
+export type { OauthComponents as OAuthComponents } from './generated/schemas';

@@ -10,6 +10,8 @@ from urllib.parse import quote, urlparse
 
 import requests
 
+from .generated.api import create_generated_api
+from .http_transport import create_http_transport, normalize_base_url
 from .types import (
     CancelPushResponse,
     CreateEmailDomainRequest,
@@ -389,6 +391,21 @@ class PushNamespace:
 # Main client
 # ---------------------------------------------------------------------------
 
+LEGACY_NAMESPACES = frozenset({"whatsapp", "sms", "email", "messages", "push"})
+
+
+def create_public_client(
+    base_url: str = "https://api.notifique.dev",
+    timeout: int = 30,
+) -> "GeneratedApi":
+    """Client for public / unauthenticated endpoints (widget, OAuth metadata, report)."""
+    http = create_http_transport(
+        base_url=base_url,
+        timeout=timeout,
+        allow_anonymous=True,
+    )
+    return create_generated_api(http)
+
 
 class Notifique:
     """Official Notifique Python client.
@@ -442,6 +459,17 @@ class Notifique:
         self.email = EmailNamespace(self)
         self.messages = MessagesNamespace(self)
         self.push = PushNamespace(self)
+
+        http = create_http_transport(
+            api_key=api_key,
+            base_url=normalize_base_url(base_url),
+            timeout=timeout,
+        )
+        self.api = create_generated_api(http)
+        for key in dir(self.api):
+            if key.startswith('_') or key in LEGACY_NAMESPACES:
+                continue
+            setattr(self, key, getattr(self.api, key))
 
     @staticmethod
     def _path_segment(value: str) -> str:

@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Notifique.Generated;
 
 namespace Notifique;
 
@@ -13,7 +14,7 @@ namespace Notifique;
 public class NotifiqueClient : IDisposable
 {
     protected const string DefaultBaseUrl = "https://api.notifique.dev/v1";
-    private const string UserAgent = "Notifique-DotNet-SDK/0.1.0";
+    private const string UserAgent = "Notifique-DotNet-SDK/0.2.0";
 
     protected readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
@@ -32,6 +33,7 @@ public class NotifiqueClient : IDisposable
     public MessagesApi Messages { get; }
     public EmailDomainsApi EmailDomains { get; }
     public PushApi Push { get; }
+    public TypedGeneratedApi Api { get; }
 
     public NotifiqueClient(string apiKey) : this(apiKey, DefaultBaseUrl)
     {
@@ -67,6 +69,7 @@ public class NotifiqueClient : IDisposable
         Messages = new MessagesApi(this);
         EmailDomains = new EmailDomainsApi(this);
         Push = new PushApi(this);
+        Api = new TypedGeneratedApi(_apiKey, _baseUrl, _httpClient);
     }
 
     internal static string EscapePathSegment(string value) => Uri.EscapeDataString(value);

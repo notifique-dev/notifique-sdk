@@ -1,7 +1,19 @@
 {
     "name": "@notifique/core",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "description": "Core types and DTOs for Notifique SDK",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/notifique-dev/notifique-sdk.git",
+        "directory": "packages/core"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist"
+    ],
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {

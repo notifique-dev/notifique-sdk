@@ -15,15 +15,15 @@ public class EmailSendResponse {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Data {
-        private List<String> emailIds;
+        private List<String> messageIds;
         private String status;
         private int count;
         private String scheduledAt;
 
-        @com.fasterxml.jackson.annotation.JsonProperty("emailIds")
-        public List<String> getEmailIds() { return emailIds; }
-        @com.fasterxml.jackson.annotation.JsonProperty("emailIds")
-        public void setEmailIds(List<String> emailIds) { this.emailIds = emailIds; }
+        @com.fasterxml.jackson.annotation.JsonProperty("messageIds")
+        public List<String> getMessageIds() { return messageIds; }
+        @com.fasterxml.jackson.annotation.JsonProperty("messageIds")
+        public void setMessageIds(List<String> messageIds) { this.messageIds = messageIds; }
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
         public int getCount() { return count; }

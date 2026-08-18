@@ -1,164 +1,118 @@
-# 🚀 Notifique SDK
+# Notifique SDK
 
-Monorepo oficial de SDKs multilíngues para a API de mensageria multicanal da Notifique: WhatsApp, SMS, Email e Push.
+Monorepo oficial dos SDKs multilíngues da [Notifique](https://notifique.dev) — **cobertura completa da API v1** (353 operações, 23 specs OpenAPI).
 
-Todos os SDKs utilizam `https://api.notifique.dev/v1` e compartilham a mesma arquitetura de namespaces.
+Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
 
----
+Documentação: [docs.notifique.dev](https://docs.notifique.dev)
 
-## 📦 Pacotes
+## Pacotes
 
-| Linguagem | Pacote | Documentação |
-| :--- | :--- | :--- |
-| **Node.js / TypeScript** | `@notifique/core`, `@notifique/sdk-node` | [README](./packages/sdk-node/README.md) |
-| **Python** | `notifique-sdk` | [README](./packages/sdk-python/README.md) |
-| **Java** | `com.notifique.sdk` | [README](./packages/sdk-java/README.md) |
-| **Go** | `github.com/notifique/notifique-sdk-go` | [README](./packages/sdk-go/README.md) |
-| **PHP** | `notifique/notifique-sdk-php` | [README](./packages/sdk-php/README.md) |
-| **Elixir** | `notifique` | [README](./packages/sdk-elixir/README.md) |
-| **.NET** | `Notifique` | [README](./packages/sdk-dotnet/README.md) |
+| Linguagem | Pacote | Cobertura OpenAPI |
+|-----------|--------|-------------------|
+| Node.js / TypeScript | `@notifique/core`, `@notifique/sdk-node` | 353 ops (`client.api` + namespaces) |
+| Python | `notifique-sdk` | 353 ops (`client.api`) |
+| Go | `github.com/notifique/notifique-sdk-go` | 353 ops (`client.API()`) |
+| Java | `com.notifique:notifique-sdk` | 353 ops (`client.api`) |
+| .NET | `Notifique` | 353 ops (`client.Api`) |
+| PHP | `notifique/notifique-sdk-php` | 353 ops (`$client->api`) |
+| Elixir | `:notifique` | 353 ops (`client.api`) |
 
----
+**Push no dispositivo** (Web/RN/Flutter/Android/iOS) fica em [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este repo cobre a **API server-side** (envio, contatos, automações, platform, etc.).
 
-## 🛠️ Início Rápido
+## Namespaces legados
 
-### Node.js / TypeScript
+Atalhos tipados para os canais mais usados — continuam disponíveis em todos os SDKs:
+
+- `whatsapp`, `sms`, `email`, `push`, `messages` (template multicanal)
+
+Para o restante da API (OAuth, contatos, automações, platform, voice, RCS, etc.), use o cliente gerado (`client.api`, `client.Api`, `$client->api`, etc.) — ver README de cada pacote.
+
+## Tipos OpenAPI (`@notifique/core`)
+
+Schemas tipados gerados a partir dos **23 specs** OpenAPI (`components`, `paths`, `operations`) são exportados por `@notifique/core`:
 
 ```typescript
-import { Notifique } from '@notifique/sdk-node';
-
-// Crie uma única vez ao iniciar a aplicação — NÃO instancie por requisição.
-const client = new Notifique({ apiKey: 'YOUR_API_KEY' });
-
-const { data } = await client.whatsapp.sendText(instanceId, '5511999999999', 'Olá! 🚀');
-console.log(data.messageIds);
+import type { PushComponents, WhatsappComponents, ApiPaths, OpResponse } from '@notifique/core';
+// 23 specs → WhatsappPaths, PushComponents, OauthOperations, etc.
 ```
 
-### Python
+`client.api` no Node SDK usa **`OpResponse` / `OpRequestBody` / `OpQuery` / `OpPathParams`** por operação — autocomplete completo no IDE.
 
-```python
-from notifique import Notifique
-
-client = Notifique(api_key='YOUR_API_KEY')
-result = client.whatsapp.send_text(instance_id, '5511999999999', 'Olá! 🐍')
-```
-
-### Java
-
-```java
-Notifique client = new Notifique("YOUR_API_KEY");
-client.getWhatsApp().sendText(instanceId, "5511999999999", "Olá! ☕");
-```
-
-### Go
-
-```go
-client := notifique.NewClient("YOUR_API_KEY")
-resp, err := client.WhatsApp.SendText(instanceID, []string{"5511999999999"}, "Olá! 🐹")
-```
-
-### PHP
-
-```php
-$client = new Notifique\Notifique('YOUR_API_KEY');
-$client->whatsapp()->sendText($instanceId, '5511999999999', 'Olá! 🐘');
-```
-
-### C# (.NET)
-
-```csharp
-using var client = new NotifiqueClient("YOUR_API_KEY");
-await client.WhatsApp.SendTextAsync(instanceId, "5511999999999", "Olá! 🔷");
-```
-
-### Elixir
-
-```elixir
-client = Notifique.new("YOUR_API_KEY")
-{:ok, body} = Notifique.Whatsapp.send_text(client, instance_id, ["5511999999999"], "Olá!")
-```
-
----
-
-## ✅ Canais e Recursos
-
-### WhatsApp
-- **Envio** — texto, imagem, vídeo, áudio, documento, localização, contato (com agendamento e opções)
-- **Mensagens** — listar, consultar status, editar, excluir, cancelar
-- **Instâncias** — listar, consultar, criar, desconectar, excluir; obter QR
-- **Opções** — webhook por mensagem, texto de resposta automática, fallback para SMS, chave de idempotência
-
-### SMS
-- **Envio** — uma ou mais mensagens (1–100 números), com agendamento
-- **Status** — consultar por ID
-- **Cancelamento** — cancelar SMS agendado
-
-### Email
-- **Envio** — um ou mais emails (`from`, `subject`, `text/html`), com agendamento
-- **Status** — consultar por ID
-- **Cancelamento** — cancelar email agendado
-- **Domínios** — listar, criar, consultar, verificar (DNS)
-
-### Push
-- **Apps** — listar, consultar, criar, atualizar, excluir
-- **Dispositivos** — registrar (web/android/ios), listar, consultar, excluir
-- **Mensagens** — enviar, listar, consultar, cancelar
-
-### Mensagens (templates)
-- Envio via template em múltiplos canais (whatsapp, sms, email) com variáveis
-
----
-
-## 🛡️ Segurança
-
-Todos os SDKs:
-- Validam a API key no momento da inicialização (falha rápida em vez de falhar na requisição)
-- Definem timeout de 30 segundos por padrão nas requisições
-- Utilizam HTTPS exclusivamente
-- Suportam chaves de idempotência em operações de envio (WhatsApp, SMS, Email, Push)
-- Lançam um erro tipado `NotifiqueApiError` / equivalente para respostas 4xx/5xx
-
----
-
-## 🏗️ Estrutura do Monorepo
-
-```
-notifique-sdk/
-├── packages/
-│   ├── core/                  # Tipos TypeScript compartilhados
-│   ├── sdk-node/              # SDK Node.js / TypeScript
-│   ├── sdk-python/            # SDK Python
-│   ├── sdk-go/                # SDK Go
-│   ├── sdk-java/              # SDK Java
-│   ├── sdk-php/               # SDK PHP
-│   ├── sdk-elixir/            # SDK Elixir
-│   └── sdk-dotnet/            # SDK .NET
-└── examples/                  # Exemplos de uso por linguagem
-```
-
----
-
-## 🧪 Testes
+## Smoke test (produção)
 
 ```bash
-# Node.js (Jest — executa todos os testes TypeScript)
-npm test
-
-# Python
-cd packages/sdk-python && pytest
-
-# Go
-cd packages/sdk-go && go test ./...
-
-# .NET
-cd packages/sdk-dotnet && dotnet test
-
-# Java
-cd packages/sdk-java && mvn test
+npm run smoke:prod                    # público (.well-known)
+NOTIFIQUE_API_KEY=sk_test_... npm run smoke:prod  # + contacts, oauth, push
 ```
 
----
+## Início rápido (Node)
 
-## 📄 Licença
+```typescript
+import { Notifique, createPublicClient } from '@notifique/sdk-node';
 
-MIT © [Notifique](https://notifique.com)
+const client = new Notifique({ apiKey: process.env.NOTIFIQUE_API_KEY! });
+
+// Legado (atalhos tipados)
+await client.whatsapp.sendText('instance-id', '5511999999999', 'Olá!');
+
+// API completa (353 operações, 23 specs OpenAPI)
+await client.api.contacts.getV1Contacts({ query: { limit: 20 } });
+await client.automations.listAutomations({ query: { page: 1 } });
+
+// Público (sem API key) — widget, OAuth metadata, report
+const publicApi = createPublicClient();
+await publicApi.public.aiWidget.getConfig({ publicKey: 'pk_...' });
+```
+
+## Geração a partir do OpenAPI
+
+Specs canônicas em `notifique-docs` (PT). O script sincroniza e gera bindings:
+
+```bash
+# requer ../notifique-docs (clone sibling)
+npm run generate
+npm test
+```
+
+Artefatos:
+
+- `packages/core/src/generated/operations.json` — registry de 353 operações
+- `packages/sdk-node/src/generated/api.ts` — cliente TypeScript
+- `operations.json` copiado em cada SDK para API dinâmica
+
+## Estrutura
+
+```
+packages/
+  core/           # tipos + registry OpenAPI
+  sdk-node/       # referência TypeScript
+  sdk-python/     # ...
+  sdk-go/
+  sdk-java/
+  sdk-dotnet/
+  sdk-php/
+  sdk-elixir/
+openapi/          # manifest de specs
+scripts/          # generate-from-openapi.mjs
+```
+
+## Testes
+
+```bash
+npm test                    # Node + contrato OpenAPI
+cd packages/sdk-go && go test ./...
+cd packages/sdk-python && pytest
+cd packages/sdk-java && mvn test   # JDK 17
+dotnet test packages/sdk-dotnet/tests/Notifique.Tests/Notifique.Tests.csproj
+cd packages/sdk-php && composer test
+cd packages/sdk-elixir && mix test
+```
+
+## Versão
+
+Monorepo alinhado em **0.2.0** (mesma linha dos push SDKs).
+
+## Segurança
+
+[SECURITY.md](SECURITY.md) · security@notifique.dev

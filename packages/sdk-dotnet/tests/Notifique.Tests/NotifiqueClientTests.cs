@@ -36,7 +36,7 @@ public class NotifiqueClientTests
         await client.WhatsApp.SendTextAsync("inst-1", "5511999999999", "Hello");
 
         Assert.NotNull(_handler.LastRequest);
-        Assert.Contains("Notifique-DotNet-SDK/0.1.0", _handler.LastRequest.Headers.UserAgent.ToString());
+        Assert.Contains("Notifique-DotNet-SDK/0.2.0", _handler.LastRequest.Headers.UserAgent.ToString());
     }
 
     [Fact]

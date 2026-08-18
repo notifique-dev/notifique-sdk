@@ -103,7 +103,7 @@ class PushDevices
 
 /**
  * POST/GET /v1/push/messages, GET /v1/push/messages/:id, POST /v1/push/messages/:id/cancel
- * SendPushRequest: to (array), title?, body?, url?, icon?, image?, data?, schedule.sendAt (camelCase), options?
+ * SendPushRequest: to, type, payload (OpenAPI NtfPush_SendPushRequest)
  */
 class PushMessages
 {

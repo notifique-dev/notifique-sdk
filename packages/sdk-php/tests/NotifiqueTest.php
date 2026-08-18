@@ -147,7 +147,7 @@ class NotifiqueTest extends TestCase
         $client = $this->getMockClient([
             new Response(202, [], json_encode([
                 'success' => true,
-                'data' => ['emailIds' => ['email-1'], 'status' => 'QUEUED', 'count' => 1],
+                'data' => ['messageIds' => ['email-1'], 'status' => 'QUEUED', 'count' => 1],
             ])),
         ]);
         $resp = $client->email->send([
@@ -156,7 +156,7 @@ class NotifiqueTest extends TestCase
             'subject' => 'Test',
             'text' => 'Body',
         ]);
-        $this->assertSame(['email-1'], $resp['data']['emailIds']);
+        $this->assertSame(['email-1'], $resp['data']['messageIds']);
         $this->assertSame('QUEUED', $resp['data']['status']);
     }
 
@@ -165,7 +165,7 @@ class NotifiqueTest extends TestCase
         $client = $this->getMockClient([
             new Response(202, [], json_encode([
                 'success' => true,
-                'data' => ['emailIds' => ['e1'], 'status' => 'QUEUED', 'count' => 1],
+                'data' => ['messageIds' => ['e1'], 'status' => 'QUEUED', 'count' => 1],
             ])),
         ]);
         $client->email->send([
@@ -187,7 +187,7 @@ class NotifiqueTest extends TestCase
         $client = $this->getMockClient([
             new Response(202, [], json_encode([
                 'success' => true,
-                'data' => ['emailIds' => ['email-1'], 'status' => 'QUEUED', 'count' => 1],
+                'data' => ['messageIds' => ['email-1'], 'status' => 'QUEUED', 'count' => 1],
             ])),
         ]);
         $client->email->send([
@@ -235,7 +235,7 @@ class NotifiqueTest extends TestCase
         $client = $this->getMockClient([
             new Response(202, [], json_encode([
                 'success' => true,
-                'data' => ['status' => 'QUEUED', 'count' => 1, 'pushIds' => ['push-1']],
+                'data' => ['status' => 'QUEUED', 'count' => 1, 'messageIds' => ['push-1']],
             ])),
         ]);
         $resp = $client->push->messages->send([
@@ -244,7 +244,7 @@ class NotifiqueTest extends TestCase
             'body' => 'Test push',
         ]);
         $this->assertTrue($resp['success']);
-        $this->assertSame(['push-1'], $resp['data']['pushIds']);
+        $this->assertSame(['push-1'], $resp['data']['messageIds']);
         $this->assertSame('QUEUED', $resp['data']['status']);
     }
 
@@ -253,11 +253,11 @@ class NotifiqueTest extends TestCase
         $client = $this->getMockClient([
             new Response(202, [], json_encode([
                 'success' => true,
-                'data' => ['status' => 'QUEUED', 'count' => 1, 'pushIds' => ['push-1']],
+                'data' => ['status' => 'QUEUED', 'count' => 1, 'messageIds' => ['push-1']],
             ])),
         ]);
         $client->push->messages->send(
-            ['to' => ['device-1'], 'title' => 'Hi', 'body' => 'Body'],
+            ['to' => ['device-1'], 'type' => 'push', 'payload' => ['title' => 'Hi', 'body' => 'Body']],
             'push-idem-789'
         );
         $this->assertCount(1, $this->container);

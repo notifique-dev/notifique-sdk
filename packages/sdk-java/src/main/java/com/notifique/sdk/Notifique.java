@@ -1,6 +1,7 @@
 package com.notifique.sdk;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notifique.sdk.generated.TypedGeneratedApi;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -17,7 +18,7 @@ import java.time.Duration;
 public class Notifique {
     private final String apiKey;
     private final String baseUrl;
-    private final HttpClient httpClient;
+    private final HttpExecutor httpExecutor;
     final ObjectMapper objectMapper;
 
     public final WhatsAppNamespace whatsapp;
@@ -25,6 +26,8 @@ public class Notifique {
     public final EmailNamespace email;
     public final MessagesNamespace messages;
     public final PushNamespace push;
+    /** Full OpenAPI coverage (353 operations) via operations.json. */
+    public final TypedGeneratedApi api;
 
     public Notifique(String apiKey) {
         this(apiKey, "https://api.notifique.dev/v1");
@@ -37,6 +40,10 @@ public class Notifique {
     }
 
     public Notifique(String apiKey, String baseUrl, HttpClient httpClient) {
+        this(apiKey, baseUrl, new JdkHttpExecutor(httpClient));
+    }
+
+    public Notifique(String apiKey, String baseUrl, HttpExecutor httpExecutor) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalArgumentException("apiKey must be a non-empty string");
         }
@@ -47,13 +54,14 @@ public class Notifique {
         }
         this.apiKey = apiKey;
         this.baseUrl = effectiveBaseUrl.endsWith("/") ? effectiveBaseUrl.substring(0, effectiveBaseUrl.length() - 1) : effectiveBaseUrl;
-        this.httpClient = httpClient;
+        this.httpExecutor = httpExecutor;
         this.objectMapper = new ObjectMapper();
         this.whatsapp = new WhatsAppNamespace(this);
         this.sms = new SmsNamespace(this);
         this.email = new EmailNamespace(this);
         this.messages = new MessagesNamespace(this);
         this.push = new PushNamespace(this);
+        this.api = new TypedGeneratedApi(apiKey, this.baseUrl, httpExecutor, objectMapper);
     }
 
     /**
@@ -78,7 +86,7 @@ public class Notifique {
             }
 
             HttpRequest request = builder.build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpExecutor.send(request);
 
             if (response.statusCode() >= 400) {
                 throw new NotifiqueApiException(response.statusCode(), response.body());

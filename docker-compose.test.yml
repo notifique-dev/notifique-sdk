@@ -1,0 +1,14 @@
+services:
+  php-test:
+    image: composer:2
+    working_dir: /app
+    volumes:
+      - ./packages/sdk-php:/app
+    command: sh -c "composer install --no-interaction && ./vendor/bin/phpunit"
+
+  elixir-test:
+    image: elixir:1.16-alpine
+    working_dir: /app
+    volumes:
+      - ./packages/sdk-elixir:/app
+    command: sh -c "apk add --no-cache git && mix local.hex --force && mix deps.get && mix test"

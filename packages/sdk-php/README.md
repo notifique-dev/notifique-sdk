@@ -1,6 +1,36 @@
 # Notifique PHP SDK
 
-SDK oficial Notifique para PHP — WhatsApp, SMS, Email, Push e envio por template.
+SDK oficial Notifique para PHP — **v0.2.0** com cobertura completa da API v1 OpenAPI.
+
+Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Cobertura completa da API (v0.2.0)
+
+- **353 operações** em **23 specs** OpenAPI
+- **Namespaces legados** (atalhos tipados): `$client->whatsapp`, `$client->sms`, `$client->email`, `$client->push`, `$client->messages`
+- **Cliente gerado**: `$client->api` — árvore dinâmica a partir de `operations.json`
+- **Namespaces na raiz**: `$client->oauth`, `$client->contacts`, `$client->automations`, … (via `__get`)
+
+```php
+<?php
+use Notifique\Notifique;
+
+$client = new Notifique('sua-api-key');
+
+// API completa
+$client->api->contacts->getV1Contacts(['query' => ['limit' => 20]]);
+$client->contacts->getV1Contacts(['query' => ['limit' => 20]]); // atalho na raiz
+
+// OAuth aninhado
+$client->oauth->apps->rotateWorkspaceAppSecret(
+    ['id' => 'app-id'],
+    ['body' => null]
+);
+```
+
+Regenerar bindings a partir de [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (na raiz do monorepo).
+
+**Push no dispositivo** (Web/RN/Flutter/Android/iOS): [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este pacote cobre a **API server-side**.
 
 ## Instalação
 
@@ -52,6 +82,17 @@ try {
 - **Apps** — `$notifique->push->apps->list()`, `get($id)`, `create(['name' => '...'])`, `update($id, $params)`, `delete($id)`
 - **Devices** — `$notifique->push->devices->register($params)`, `list()`, `get($id)`, `delete($id)`
 - **Messages** — `$notifique->push->messages->send($params)`, `list()`, `get($id)`, `cancel($id)`
+
+Contrato canônico de envio: `to` + `type` + `payload` → `data.messageIds` (não `pushIds`, não `title`/`body` na raiz):
+
+```php
+$resp = $notifique->push->messages->send([
+    'to' => [$deviceId],
+    'type' => 'push',
+    'payload' => ['title' => 'Título', 'body' => 'Corpo'],
+]);
+print_r($resp['data']['messageIds']);
+```
 
 ## Messages (template)
 

@@ -1,0 +1,24 @@
+/** Auto-generated OpenAPI component types — do not edit manually */
+export type { paths as WhatsappPaths, components as WhatsappComponents, operations as WhatsappOperations } from './whatsapp-api_api-reference_openapi-whatsapp';
+export type { paths as SmsPaths, components as SmsComponents, operations as SmsOperations } from './sms-api_api-reference_openapi-sms';
+export type { paths as TelegramPaths, components as TelegramComponents, operations as TelegramOperations } from './telegram-api_api-reference_openapi-telegram';
+export type { paths as InstagramPaths, components as InstagramComponents, operations as InstagramOperations } from './instagram-api_api-reference_openapi-instagram';
+export type { paths as EmailPaths, components as EmailComponents, operations as EmailOperations } from './emails-api_api-reference_openapi-email';
+export type { paths as PushPaths, components as PushComponents, operations as PushOperations } from './push-api_api-reference_openapi-push';
+export type { paths as RcsPaths, components as RcsComponents, operations as RcsOperations } from './rcs-api_api-reference_openapi-rcs';
+export type { paths as VoicePaths, components as VoiceComponents, operations as VoiceOperations } from './voice-api_api-reference_openapi-voice';
+export type { paths as PlatformPaths, components as PlatformComponents, operations as PlatformOperations } from './platform-api_api-reference_openapi-platform';
+export type { paths as OauthPaths, components as OauthComponents, operations as OauthOperations } from './oauth-api_api-reference_openapi-oauth';
+export type { paths as WebhooksPaths, components as WebhooksComponents, operations as WebhooksOperations } from './guides_webhooks_api-reference_openapi-webhooks';
+export type { paths as LogsPaths, components as LogsComponents, operations as LogsOperations } from './guides_logs_api-reference_openapi-logs';
+export type { paths as WorkspacesPaths, components as WorkspacesComponents, operations as WorkspacesOperations } from './guides_workspaces_api-reference_openapi-workspaces';
+export type { paths as PhoneNumbersPaths, components as PhoneNumbersComponents, operations as PhoneNumbersOperations } from './phone-numbers-api_api-reference_openapi-phone-numbers';
+export type { paths as ContactsPaths, components as ContactsComponents, operations as ContactsOperations } from './contacts-api_api-reference_openapi-contacts';
+export type { paths as TemplatesPaths, components as TemplatesComponents, operations as TemplatesOperations } from './template-api_api-reference_openapi-templates';
+export type { paths as AutomationsPaths, components as AutomationsComponents, operations as AutomationsOperations } from './automations-api_api-reference_openapi-automations';
+export type { paths as MarketingAddonsPaths, components as MarketingAddonsComponents, operations as MarketingAddonsOperations } from './marketing-addons-api_api-reference_openapi-marketing-addons';
+export type { paths as ShortLinksPaths, components as ShortLinksComponents, operations as ShortLinksOperations } from './short-links-api_api-reference_openapi-short-links';
+export type { paths as ConversionsPaths, components as ConversionsComponents, operations as ConversionsOperations } from './short-links-api_api-reference_openapi-conversions';
+export type { paths as AiWebWidgetPaths, components as AiWebWidgetComponents, operations as AiWebWidgetOperations } from './ai-web-widget_api-reference_openapi-ai-web-widget';
+export type { paths as SuppressionsPaths, components as SuppressionsComponents, operations as SuppressionsOperations } from './suppressions-api_api-reference_openapi-suppressions';
+export type { paths as ReportPaths, components as ReportComponents, operations as ReportOperations } from './guides_compliance_openapi-report';

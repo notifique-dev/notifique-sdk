@@ -3,7 +3,6 @@
     "private": true,
     "description": "Notifique SDK Monorepo",
     "workspaces": [
-        "packages/api",
         "packages/core",
         "packages/sdk-node",
         "packages/sdk-python",
@@ -14,8 +13,11 @@
         "packages/sdk-dotnet"
     ],
     "scripts": {
-        "build": "npm run build --workspaces",
-        "test": "jest"
+        "build": "npm run generate && npm run build --workspaces --if-present",
+        "test": "jest",
+        "generate": "node scripts/generate-from-openapi.mjs",
+        "sync-openapi": "node scripts/generate-from-openapi.mjs",
+        "smoke:prod": "node scripts/smoke-prod.mjs"
     },
     "keywords": [],
     "author": "",
@@ -24,6 +26,7 @@
         "@types/jest": "^30.0.0",
         "@types/supertest": "^6.0.3",
         "jest": "^30.2.0",
+        "openapi-typescript": "^7.13.0",
         "supertest": "^7.2.2",
         "ts-jest": "^29.4.6",
         "ts-node": "^10.9.2"

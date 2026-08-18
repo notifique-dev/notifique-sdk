@@ -1,6 +1,37 @@
 # Notifique Python SDK
 
-Official Notifique SDK for Python — **WhatsApp**, **SMS**, **Email**, **Push**, and multi-channel template sends. Fully typed with `TypedDict`.
+Official Notifique SDK for Python — **v0.2.0** with full OpenAPI v1 coverage.
+
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Full API coverage (v0.2.0)
+
+- **353 operations** across **23 OpenAPI specs**
+- **Legacy namespaces** (typed shortcuts): `whatsapp`, `sms`, `email`, `push`, `messages`
+- **Generated client**: `client.api` — dynamic namespace tree from `operations.json` (snake_case method names)
+- **Root namespaces** on the client: `client.contacts`, `client.automations`, `client.oauth`, …
+- **Public endpoints** (no API key): `create_public_client()`
+
+```python
+from notifique import Notifique, create_public_client
+
+client = Notifique(api_key="your-api-key")
+
+# Full API (methods use snake_case)
+client.api.contacts.get_v1_contacts(query={"limit": 20})
+client.api.automations.list_automations(query={"page": 1})
+
+# Root namespace shortcuts
+client.contacts.get_v1_contacts(query={"limit": 20})
+
+# Public / unauthenticated
+public_api = create_public_client()
+public_api.public.ai_widget.get_config(path_params={"publicKey": "pk_..."})
+```
+
+Regenerate bindings from [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (in the monorepo root).
+
+**Client-side push**: [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
 
 ## Installation
 
@@ -116,8 +147,13 @@ client.push.devices.list(params={"appId": app_id})
 client.push.devices.get(device_id)
 client.push.devices.delete(device_id)
 
-# Messages
-client.push.messages.send({"to": [device_id], "title": "Title", "body": "Body"})
+# Messages — canonical contract: to + type + payload → messageIds
+result = client.push.messages.send({
+    "to": [device_id],
+    "type": "push",
+    "payload": {"title": "Title", "body": "Body"},
+})
+print(result["data"]["messageIds"])  # NOT pushIds
 client.push.messages.list()
 client.push.messages.get(message_id)
 client.push.messages.cancel(message_id)
