@@ -9,11 +9,13 @@
     <Authors>Notifique</Authors>
     <Description>SDK oficial Notifique para .NET — WhatsApp, SMS, Email, Push e templates</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/notifique-dev/notifique-sdk</RepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <EmbeddedResource Include="..\..\operations.json" Link="operations.json" />
   </ItemGroup>
 </Project>
