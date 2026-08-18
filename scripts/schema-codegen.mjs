@@ -69,8 +69,8 @@ function fixJavaModelImports(modelsDir) {
     const filePath = path.join(modelsDir, file);
     let content = fs.readFileSync(filePath, 'utf8');
     let fixed = content
-      .replace(/import com\.notifique\.ApiClient;/g, 'import com.notifique.sdk.ApiClient;')
-      .replace(/import com\.notifique\.JSON;/g, 'import com.notifique.sdk.JSON;');
+      .replace(/import com\.notifique\.ApiClient;/g, 'import dev.notifique.sdk.ApiClient;')
+      .replace(/import com\.notifique\.JSON;/g, 'import dev.notifique.sdk.JSON;');
     if (fixed !== content) fs.writeFileSync(filePath, fixed);
   }
 }
@@ -198,8 +198,8 @@ export function generateOpenApiModels({ root, execSync }) {
 
   // Java jackson models (native) + supporting JSON/ApiClient/AbstractOpenApiSchema
   const javaModelProps = [
-    'modelPackage=com.notifique.sdk.openapi.models',
-    'apiPackage=com.notifique.sdk',
+    'modelPackage=dev.notifique.sdk.openapi.models',
+    'apiPackage=dev.notifique.sdk',
     'dateLibrary=java8',
     'hideGenerationTimestamp=true',
     'library=native',

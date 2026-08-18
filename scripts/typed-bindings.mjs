@@ -376,17 +376,17 @@ function csharpReturnType(op, csModels) {
 function emitJavaTypedApi(tree, helpers) {
   const { toPascal, schemaToModelName, javaModels } = helpers;
   const lines = [
-    'package com.notifique.sdk.generated;',
+    'package dev.notifique.sdk.generated;',
     '',
     'import com.fasterxml.jackson.databind.JsonNode;',
-    'import com.notifique.sdk.openapi.models.*;',
+    'import dev.notifique.sdk.openapi.models.*;',
     'import java.util.Map;',
     '',
     'public final class TypedGeneratedApi {',
     '    private final GeneratedApiTransport transport;',
     '    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;',
     '',
-    '    public TypedGeneratedApi(String apiKey, String baseUrl, com.notifique.sdk.HttpExecutor httpExecutor, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {',
+    '    public TypedGeneratedApi(String apiKey, String baseUrl, dev.notifique.sdk.HttpExecutor httpExecutor, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {',
     '        this.transport = new GeneratedApiTransport(apiKey, GeneratedApiTransport.normalizeApiBaseUrl(baseUrl), httpExecutor, objectMapper);',
     '        this.objectMapper = objectMapper;',
     '    }',
