@@ -46,7 +46,7 @@ def main():
         "subject": "Teste",
         "html": "<p>Olá!</p>",
     })
-    print("emailIds:", res.get("data", {}).get("emailIds"))
+    print("messageIds:", res.get("data", {}).get("messageIds"))
 
     # Envio por template (whatsapp + sms + email)
     print("\n5. Template multi-canal...")

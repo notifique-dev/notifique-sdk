@@ -256,7 +256,7 @@ type EmailSendParams struct {
 type EmailSendResponse struct {
 	Success bool `json:"success"`
 	Data    struct {
-		EmailIDs    []string `json:"emailIds"`
+		MessageIDs  []string `json:"messageIds"`
 		Status      string   `json:"status"`
 		Count       int      `json:"count"`
 		ScheduledAt string   `json:"scheduledAt,omitempty"`
@@ -432,31 +432,28 @@ type PushDeviceRegisterRequest struct {
 	ExternalUserID  string                 `json:"externalUserId,omitempty"`
 }
 
-// SendPushParams — POST /v1/push/messages
+// SendPushParams — POST /v1/push/messages (OpenAPI NtfPush_SendPushRequest)
 type SendPushParams struct {
-	To      []string               `json:"to"`
-	Title   string                 `json:"title,omitempty"`
-	Body    string                 `json:"body,omitempty"`
-	URL     string                 `json:"url,omitempty"`
-	Icon    string                 `json:"icon,omitempty"`
-	Image   string                 `json:"image,omitempty"`
-	Data    map[string]interface{} `json:"data,omitempty"`
+	To       []string               `json:"to"`
+	Type     string                 `json:"type"`
+	Payload  map[string]interface{} `json:"payload"`
 	Schedule *struct {
 		SendAt string `json:"sendAt"`
 	} `json:"schedule,omitempty"`
 	Options *struct {
 		Priority string `json:"priority,omitempty"`
 	} `json:"options,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// SendPushResponse — resposta do send push
+// SendPushResponse — OpenAPI NtfPush_SendPushResponse
 type SendPushResponse struct {
 	Success bool `json:"success"`
 	Data    struct {
-		Status     string   `json:"status"`
-		Count      int      `json:"count"`
-		PushIDs    []string `json:"pushIds"`
-		ScheduledAt string  `json:"scheduledAt,omitempty"`
+		Status      string   `json:"status"`
+		Count       int      `json:"count"`
+		MessageIDs  []string `json:"messageIds"`
+		ScheduledAt string   `json:"scheduledAt,omitempty"`
 	} `json:"data"`
 }
 

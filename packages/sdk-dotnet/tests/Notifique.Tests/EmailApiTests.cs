@@ -18,7 +18,7 @@ public class EmailApiTests
     [Fact]
     public async Task SendAsync_Success()
     {
-        _handler.SetResponse(HttpStatusCode.OK, "{\"success\":true,\"data\":{\"emailIds\":[\"email-1\"],\"status\":\"queued\",\"count\":1}}");
+        _handler.SetResponse(HttpStatusCode.OK, "{\"success\":true,\"data\":{\"messageIds\":[\"email-1\"],\"status\":\"queued\",\"count\":1}}");
 
         var parameters = new EmailSendParams
         {
@@ -31,7 +31,7 @@ public class EmailApiTests
         var response = await _client.Email.SendAsync(parameters);
 
         Assert.True(response.Success);
-        Assert.Equal(new List<string> { "email-1" }, response.Data.EmailIds);
+        Assert.Equal(new List<string> { "email-1" }, response.Data.MessageIds);
         Assert.Equal("queued", response.Data.Status);
         Assert.Equal(HttpMethod.Post, _handler.LastRequest?.Method);
         Assert.Equal("https://api.notifique.dev/v1/email/messages", _handler.LastRequest?.RequestUri?.ToString());

@@ -96,12 +96,12 @@ defmodule NotifiqueTest do
   describe "Email" do
     test "send", %{client: client} do
       adapter = fn req ->
-        {req, Req.Response.new(status: 200, body: %{"success" => true, "data" => %{"emailIds" => ["email-1"], "status" => "queued"}})}
+        {req, Req.Response.new(status: 200, body: %{"success" => true, "data" => %{"messageIds" => ["email-1"], "status" => "queued"}})}
       end
 
       params = %{"from" => "noreply@example.com", "to" => ["u@example.com"], "subject" => "Test", "text" => "Body"}
       {:ok, resp} = Notifique.Email.send(client, params, adapter: adapter)
-      assert resp["data"]["emailIds"] == ["email-1"]
+      assert resp["data"]["messageIds"] == ["email-1"]
     end
 
     test "cancel", %{client: client} do

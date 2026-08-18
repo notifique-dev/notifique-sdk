@@ -62,6 +62,8 @@ Thumbs.db
 
 ## Misc
 *.log
+tmp/
+openapi/bundled.openapi.json
 
 # Java compiled artifacts (also contained old 'zenvio' brand classes — removed in security audit)
 packages/sdk-java/target/

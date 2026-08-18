@@ -1,6 +1,35 @@
 # Notifique Go SDK
 
-SDK oficial Notifique para Go — WhatsApp, SMS, Email, Push e envio por template.
+SDK oficial Notifique para Go — **v0.2.0** com cobertura completa da API v1 OpenAPI.
+
+Repositório: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Cobertura completa da API (v0.2.0)
+
+- **353 operações** em **23 specs** OpenAPI
+- **Namespaces legados** (atalhos tipados): `WhatsApp`, `Sms`, `Email`, `Push`, `Messages`
+- **Cliente gerado**: `client.API()` — árvore dinâmica a partir de `operations.json`
+- **Chamada por ID**: `client.API().Call("whatsapp.getV1WhatsappMessages", opts)`
+- **Navegação**: `ns, _ := client.API().Navigate("oauth", "apps"); ns.Call("rotateWorkspaceAppSecret", opts)`
+
+```go
+api := client.API()
+
+// Por operation path
+_, err := api.Call("whatsapp.getV1WhatsappMessages", notifique.DynamicRequestOptions{
+    Query: map[string]string{"page": "1", "limit": "20"},
+})
+
+// Por namespace
+oauthApps, err := api.Navigate("oauth", "apps")
+_, err = oauthApps.Call("rotateWorkspaceAppSecret", notifique.DynamicRequestOptions{
+    PathParams: map[string]string{"id": "app-id"},
+})
+```
+
+Regenerar bindings a partir de [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (na raiz do monorepo).
+
+**Push no dispositivo** (Web/RN/Flutter/Android/iOS): [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). Este pacote cobre a **API server-side**.
 
 ## Instalação
 
@@ -63,6 +92,17 @@ func main() {
 - **Apps** — `client.Push.Apps.List(params)`, `Get(id)`, `Create(name)`, `Update(id, body)`, `Delete(id)`
 - **Devices** — `client.Push.Devices.Register(params)`, `List(params)`, `Get(id)`, `Delete(id)`
 - **Messages** — `client.Push.Messages.Send(params)`, `List(params)`, `Get(id)`, `Cancel(id)`
+
+Contrato canônico de envio (`SendPushParams`): `to` + `type` (`push` ou `template`) + `payload` → resposta com `data.messageIds` (não `pushIds`):
+
+```go
+resp, err := client.Push.Messages.Send(notifique.SendPushParams{
+    To:   []string{deviceID},
+    Type: "push",
+    Payload: map[string]any{"title": "Título", "body": "Corpo"},
+})
+fmt.Println(resp.Data.MessageIDs)
+```
 
 ## Messages (template)
 

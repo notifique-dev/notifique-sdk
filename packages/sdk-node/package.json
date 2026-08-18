@@ -1,7 +1,19 @@
 {
     "name": "@notifique/sdk-node",
-    "version": "0.1.0",
-    "description": "Notifique SDK for Node.js",
+    "version": "0.2.1",
+    "description": "Notifique SDK for Node.js — full API v1 OpenAPI coverage",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/notifique-dev/notifique-sdk.git",
+        "directory": "packages/sdk-node"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist"
+    ],
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -9,8 +21,8 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@notifique/core": "*",
-        "axios": "^1.6.0"
+        "@notifique/core": "^0.2.1",
+        "axios": "^1.19.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",

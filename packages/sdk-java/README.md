@@ -1,24 +1,55 @@
 # Notifique Java SDK
 
-SDK oficial Notifique para Java — WhatsApp, SMS, Email, Push e envio por template.
+Official Notifique SDK for Java — **v0.2.0** with full OpenAPI v1 coverage.
 
-## Instalação
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Full API coverage (v0.2.0)
+
+- **353 operations** across **23 OpenAPI specs**
+- **Legacy namespaces** (typed shortcuts): `whatsapp`, `sms`, `email`, `push`, `messages`
+- **Generated client**: `client.api` — nested namespaces from `operations.json`
+- **Invoke pattern**: `client.api.namespace("oauth").invoke("listWorkspaceApps", options)`
+
+```java
+import com.fasterxml.jackson.databind.JsonNode;
+import com.notifique.sdk.Notifique;
+import com.notifique.sdk.generated.ApiRequestOptions;
+
+Notifique client = new Notifique("your-api-key");
+
+// Full API via generated namespaces
+JsonNode contacts = client.api
+    .namespace("contacts")
+    .invoke("getV1Contacts", ApiRequestOptions.builder().query(Map.of("limit", "20")).build());
+
+JsonNode apps = client.api
+    .namespace("oauth")
+    .namespace("apps")
+    .invoke("rotateWorkspaceAppSecret", Map.of("id", "app-id"), ApiRequestOptions.builder().build());
+```
+
+Regenerate bindings from [notifique-docs](https://github.com/notifique-dev/notifique-docs): `npm run generate` (monorepo root).
+
+**Client-side push**: [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
+
+## Installation
 
 ### Maven
 ```xml
 <dependency>
     <groupId>com.notifique</groupId>
     <artifactId>notifique-sdk</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
 ### Gradle
 ```gradle
-implementation 'com.notifique:notifique-sdk:0.1.0'
+implementation 'com.notifique:notifique-sdk:0.2.0'
 ```
 
-## Uso
+## Quick Start (legacy namespaces)
 
 ```java
 import com.notifique.sdk.Notifique;
@@ -52,17 +83,20 @@ notifique.email.domains().list();
 notifique.email.domains().create("seudominio.com");
 notifique.email.domains().verify("domain-id");
 
-// Push
+// Push — canonical contract: to + type + payload → messageIds
+PushSendParams pushParams = new PushSendParams();
+pushParams.setTo(List.of("device-id"));
+pushParams.setType("push");
+pushParams.setPayload(Map.of("title", "Título", "body", "Corpo"));
+notifique.push.messages.send(pushParams); // response data.messageIds, NOT pushIds
 notifique.push.apps.list();
-notifique.push.apps.create("Meu App");
 notifique.push.devices.register(deviceParams);
-notifique.push.messages.send(pushParams);
 
 // Templates
 notifique.messages.send(messagesParams);
 ```
 
-## Compatibilidade
+## Compatibility
 
 - Java 11+.
 - Jackson Databind.

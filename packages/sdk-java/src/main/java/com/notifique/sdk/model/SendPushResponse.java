@@ -1,9 +1,12 @@
 package com.notifique.sdk.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
+/** Resposta POST /v1/push/messages — OpenAPI NtfPush_SendPushResponse */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SendPushResponse {
     private boolean success;
     private SendPushResponseData data;
@@ -13,20 +16,24 @@ public class SendPushResponse {
     public SendPushResponseData getData() { return data; }
     public void setData(SendPushResponseData data) { this.data = data; }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class SendPushResponseData {
         private String status;
-        private Integer count;
-        private List<String> pushIds;
+        private int count;
+        private List<String> messageIds;
         private String scheduledAt;
 
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
-        public Integer getCount() { return count; }
-        public void setCount(Integer count) { this.count = count; }
-        @com.fasterxml.jackson.annotation.JsonProperty("pushIds") public List<String> getPushIds() { return pushIds; }
-        @com.fasterxml.jackson.annotation.JsonProperty("pushIds") public void setPushIds(List<String> v) { this.pushIds = v; }
-        @com.fasterxml.jackson.annotation.JsonProperty("scheduled_at") public String getScheduledAt() { return scheduledAt; }
-        @com.fasterxml.jackson.annotation.JsonProperty("scheduled_at") public void setScheduledAt(String v) { this.scheduledAt = v; }
+        public int getCount() { return count; }
+        public void setCount(int count) { this.count = count; }
+        @com.fasterxml.jackson.annotation.JsonProperty("messageIds")
+        public List<String> getMessageIds() { return messageIds; }
+        @com.fasterxml.jackson.annotation.JsonProperty("messageIds")
+        public void setMessageIds(List<String> messageIds) { this.messageIds = messageIds; }
+        @com.fasterxml.jackson.annotation.JsonProperty("scheduledAt")
+        public String getScheduledAt() { return scheduledAt; }
+        @com.fasterxml.jackson.annotation.JsonProperty("scheduledAt")
+        public void setScheduledAt(String scheduledAt) { this.scheduledAt = scheduledAt; }
     }
 }

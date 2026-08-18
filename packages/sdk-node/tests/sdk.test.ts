@@ -449,7 +449,7 @@ describe('Node.js SDK — Email', () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { emailIds: ['em-1'], status: 'QUEUED', count: 1 },
+        data: { messageIds: ['em-1'], status: 'QUEUED', count: 1 },
       },
     });
 
@@ -466,7 +466,7 @@ describe('Node.js SDK — Email', () => {
       subject: 'Test',
       html: '<p>Hello</p>',
     }, undefined);
-    expect(result.data.emailIds).toEqual(['em-1']);
+    expect(result.data.messageIds).toEqual(['em-1']);
     expect(result.data.status).toBe('QUEUED');
   });
 
@@ -718,23 +718,30 @@ describe('Node.js SDK — Push', () => {
     expect(result.success).toBe(true);
   });
 
-  it('push.messages.send calls POST /push/messages', async () => {
+  it('push.messages.send calls POST /push/messages with canonical contract', async () => {
     mockPost.mockResolvedValueOnce({
       data: {
         success: true,
-        data: { status: 'QUEUED', count: 1, pushIds: ['push-1'] },
+        data: { status: 'QUEUED', count: 1, messageIds: ['push-1'] },
       },
     });
 
     const result = await notifique.push.messages.send({
       to: ['dev-1'],
-      title: 'Hi',
-      body: 'Body',
+      type: 'push',
+      payload: { title: 'Hi', body: 'Body' },
     });
 
-    expect(mockPost).toHaveBeenCalledWith('/push/messages', expect.objectContaining({ to: ['dev-1'], title: 'Hi', body: 'Body' }), undefined);
-    expect(result.data.status).toBe('QUEUED');
-    expect(result.data.pushIds).toEqual(['push-1']);
+    expect(mockPost).toHaveBeenCalledWith(
+      '/push/messages',
+      expect.objectContaining({
+        to: ['dev-1'],
+        type: 'push',
+        payload: { title: 'Hi', body: 'Body' },
+      }),
+      undefined
+    );
+    expect(result.data.messageIds).toEqual(['push-1']);
   });
 
   it('push.messages.list calls GET /push/messages with params', async () => {

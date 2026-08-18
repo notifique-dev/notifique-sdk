@@ -3,11 +3,13 @@ defmodule Notifique do
   Cliente Notifique — WhatsApp, SMS, Email, Push e envio por template (messages).
   """
 
-  defstruct [:api_key, :base_url]
+  defstruct [:api_key, :base_url, :api, :dynamic_api]
 
   @type t :: %__MODULE__{
           api_key: String.t(),
-          base_url: String.t()
+          base_url: String.t(),
+          api: Notifique.TypedApi.t() | nil,
+          dynamic_api: map() | nil
         }
 
   @doc """
@@ -24,10 +26,38 @@ defmodule Notifique do
       raise ArgumentError, "base_url must be an absolute HTTPS URL"
     end
 
-    %__MODULE__{
+    client = %__MODULE__{
       api_key: api_key,
       base_url: String.trim_trailing(base_url, "/")
     }
+
+    typed = Notifique.TypedApi.new(client)
+
+    %{
+      client
+      | api: typed,
+        dynamic_api: Notifique.DynamicApi.build(client)
+    }
+  end
+
+  @doc """
+  Returns the typed OpenAPI API (`Notifique.TypedApi`) for IDE/Dialyzer autocomplete.
+  """
+  @spec api(t()) :: Notifique.TypedApi.t()
+  def api(%__MODULE__{api: api}) when not is_nil(api), do: api
+
+  @doc """
+  Returns the dynamic OpenAPI map (353 operações) para introspect ou testes de cobertura.
+  """
+  @spec dynamic_api(t()) :: map()
+  def dynamic_api(%__MODULE__{dynamic_api: dynamic_api}) when is_map(dynamic_api), do: dynamic_api
+
+  @doc """
+  Returns a top-level namespace from the dynamic API (non-legacy namespaces).
+  """
+  @spec namespace(t(), String.t()) :: map() | nil
+  def namespace(client, name) do
+    get_in(dynamic_api(client), [name])
   end
 
   @doc """
@@ -36,7 +66,17 @@ defmodule Notifique do
   Caso contrário retorna `{:ok, body}` (body é o JSON decodificado).
   """
   def request(client, method, path, body \\ nil, opts \\ []) do
-    url = client.base_url <> path
+    url =
+      if Keyword.get(opts, :absolute, false) do
+        path
+      else
+        client.base_url <> path
+      end
+
+    opts = Keyword.delete(opts, :absolute)
+    {adapter, opts} = Keyword.pop(opts, :adapter)
+    extra_headers = Keyword.get(opts, :headers, [])
+    opts = Keyword.delete(opts, :headers)
 
     base = [
       method: method,
@@ -45,7 +85,7 @@ defmodule Notifique do
       headers: [
         {"content-type", "application/json"},
         {"user-agent", "Notifique-Elixir-SDK/0.2.0"}
-      ]
+      ] ++ extra_headers
     ]
 
     options =
@@ -54,16 +94,40 @@ defmodule Notifique do
       |> maybe_put_json(body)
       |> Keyword.merge(opts)
 
-    case Req.request(options) do
-      {:ok, %{status: status, body: resp_body}} when status >= 200 and status < 300 ->
-        {:ok, resp_body}
+    if adapter do
+      req = %Req.Request{method: method, url: url, options: Keyword.put(options, :json, body)}
+      {_req, %Req.Response{} = resp} = adapter.(req)
+      case resp.status do
+        status when status >= 200 and status < 300 -> {:ok, resp.body}
+        status when status >= 400 -> {:error, %{status: status, body: resp.body}}
+      end
+    else
+      case Req.request(options) do
+        {:ok, %{status: status, body: resp_body}} when status >= 200 and status < 300 ->
+          {:ok, resp_body}
 
-      {:ok, %{status: status, body: resp_body}} when status >= 400 ->
-        {:error, %{status: status, body: resp_body}}
+        {:ok, %{status: status, body: resp_body}} when status >= 400 ->
+          {:error, %{status: status, body: resp_body}}
 
-      {:error, reason} ->
-        {:error, reason}
+        {:error, reason} ->
+          {:error, reason}
+      end
     end
+  end
+
+  @doc """
+  Executes a request using an absolute OpenAPI path (e.g. `/v1/oauth/apps`).
+  """
+  @spec request_api(t(), atom(), String.t(), term(), keyword()) ::
+          {:ok, term()} | {:error, term()}
+  def request_api(client, method, path, body \\ nil, opts \\ []) do
+    api_base =
+      client.base_url
+      |> String.trim_trailing("/")
+      |> String.replace_suffix("/v1", "")
+
+    full_url = api_base <> path
+    request(client, method, full_url, body, Keyword.put(opts, :absolute, true))
   end
 
   defp maybe_put_json(opts, nil), do: opts

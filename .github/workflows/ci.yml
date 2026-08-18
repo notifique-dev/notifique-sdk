@@ -18,7 +18,7 @@ jobs:
     name: Node tests and audit
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout SDK
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -26,12 +26,18 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
+      # Generated OpenAPI artifacts are committed in-repo. Regenerate locally with
+      # sibling ../notifique-docs (see README); CI validates the committed registry.
       - name: Run tests
         run: npm test
+
+      - name: Smoke test (prod public endpoints)
+        run: npm run smoke:prod
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -47,7 +53,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: false
 
       - name: Run go tests
         working-directory: packages/sdk-go
@@ -107,3 +112,41 @@ jobs:
 
       - name: Test
         run: dotnet test packages/sdk-dotnet/tests/Notifique.Tests/Notifique.Tests.csproj -c Release --no-restore
+
+  php:
+    name: PHP SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install and test
+        working-directory: packages/sdk-php
+        run: |
+          composer install --no-interaction
+          composer test
+
+  elixir:
+    name: Elixir SDK tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.16"
+          otp-version: "26"
+
+      - name: Test
+        working-directory: packages/sdk-elixir
+        run: |
+          mix deps.get
+          mix test

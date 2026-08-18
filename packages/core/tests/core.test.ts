@@ -136,7 +136,7 @@ describe('Core Type Contracts — Email (OpenAPI SendEmailRequest / responses)',
   it('EmailSendResponse.data.status is QUEUED | SCHEDULED', () => {
     const res: EmailSendResponse = {
       success: true,
-      data: { emailIds: ['em-1'], status: 'QUEUED', count: 1 },
+      data: { messageIds: ['em-1'], status: 'QUEUED', count: 1 },
     };
     expect(res.data.status).toBe('QUEUED');
   });
@@ -185,24 +185,24 @@ describe('Core Type Contracts — Email (OpenAPI SendEmailRequest / responses)',
 });
 
 describe('Core Type Contracts — Push (OpenAPI SendPushRequest / responses)', () => {
-  it('SendPushParams has to and optional title, body, schedule.sendAt, options', () => {
+  it('SendPushParams uses canonical to + type + payload', () => {
     const params: SendPushParams = {
       to: ['dev-1'],
-      title: 'Hi',
-      body: 'Body',
+      type: 'push',
+      payload: { title: 'Hi', body: 'Body' },
       schedule: { sendAt: '2025-12-31T14:00:00.000Z' },
       options: { priority: 'normal' },
     };
-    expect(params.to).toEqual(['dev-1']);
-    expect(params.schedule?.sendAt).toBeDefined();
+    expect(params.type).toBe('push');
+    expect(params.payload).toMatchObject({ title: 'Hi' });
   });
 
-  it('SendPushResponse.data.status is QUEUED | SCHEDULED', () => {
+  it('SendPushResponse.data uses messageIds', () => {
     const res: SendPushResponse = {
       success: true,
-      data: { status: 'QUEUED', count: 1, pushIds: ['push-1'] },
+      data: { status: 'QUEUED', count: 1, messageIds: ['push-1'] },
     };
-    expect(res.data.status).toBe('QUEUED');
+    expect(res.data.messageIds).toEqual(['push-1']);
   });
 
   it('PushMessageListParams accepts status enum (PushMessageStatus)', () => {

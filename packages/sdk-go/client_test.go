@@ -238,7 +238,7 @@ func TestEmailSend(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		rsp := EmailSendResponse{Success: true}
-		rsp.Data.EmailIDs = []string{"email-1"}
+		rsp.Data.MessageIDs = []string{"email-1"}
 		rsp.Data.Status = "queued"
 		json.NewEncoder(w).Encode(rsp)
 	}))
@@ -252,7 +252,7 @@ func TestEmailSend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !resp.Success || len(resp.Data.EmailIDs) != 1 {
+	if !resp.Success || len(resp.Data.MessageIDs) != 1 {
 		t.Errorf("unexpected: %+v", resp)
 	}
 }

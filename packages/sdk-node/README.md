@@ -1,6 +1,52 @@
 # @notifique/sdk-node
 
-Official Notifique SDK for Node.js and TypeScript — WhatsApp, SMS, Email, Push, and template sends.
+Official Notifique SDK for Node.js and TypeScript — **v0.2.0** with full OpenAPI v1 coverage.
+
+Repository: [notifique-dev/notifique-sdk](https://github.com/notifique-dev/notifique-sdk)
+
+## Full API coverage (v0.2.0)
+
+- **353 operations** across **23 OpenAPI specs** (contacts, automations, oauth, platform, voice, RCS, etc.)
+- **Legacy namespaces** (typed shortcuts): `whatsapp`, `sms`, `email`, `push`, `messages`
+- **Generated client**: `client.api.*` — every operation from `operations.json`
+- **Root namespaces** on the client instance: `client.contacts`, `client.automations`, `client.oauth`, … (all non-legacy top-level namespaces)
+- **Public endpoints** (no API key): `createPublicClient()` — widget, OAuth metadata, report
+
+```typescript
+import { Notifique, createPublicClient } from '@notifique/sdk-node';
+
+const client = new Notifique({ apiKey: process.env.NOTIFIQUE_API_KEY! });
+
+// Full API
+await client.api.contacts.getV1Contacts({ query: { limit: 20 } });
+await client.automations.listAutomations({ query: { page: 1 } });
+await client.oauth.listWorkspaceApps();
+
+// Root namespace shortcuts (same as client.api.*)
+await client.contacts.getV1Contacts({ query: { limit: 20 } });
+
+// Public / unauthenticated
+const publicApi = createPublicClient();
+await publicApi.public.aiWidget.getConfig({ publicKey: 'pk_...' });
+```
+
+OpenAPI schemas are exported from `@notifique/core` (re-exported by this package). **`client.api` methods are fully typed** — `options.query`, `options.body`, `pathParams`, and return types come from the OpenAPI specs (`OpResponse`, `OpRequestBody`, `OpQuery`, `OpPathParams`).
+
+```typescript
+import type { OpResponse } from '@notifique/core';
+
+const res = await client.api.push.getV1PushApps({ query: { limit: 10 } });
+type AppsList = OpResponse<'/v1/push/apps', 'get'>;
+```
+
+Regenerate bindings from [notifique-docs](https://github.com/notifique-dev/notifique-docs):
+
+```bash
+# clone notifique-docs as sibling, then:
+npm run generate
+```
+
+**Client-side push** (Web/RN/Flutter/Android/iOS): [notifique-dev/notifique-push-sdks](https://github.com/notifique-dev/notifique-push-sdks). This package is the **server-side** API.
 
 ## Installation
 
@@ -113,8 +159,13 @@ await notifique.push.devices.list({ appId });
 await notifique.push.devices.get(deviceId);
 await notifique.push.devices.delete(deviceId);
 
-// Messages
-await notifique.push.messages.send({ to: [deviceId], title: 'Title', body: 'Body' });
+// Messages — canonical contract: to + type + payload → messageIds
+await notifique.push.messages.send({
+  to: [deviceId],
+  type: 'push',
+  payload: { title: 'Title', body: 'Body' },
+});
+console.log(result.data.messageIds); // NOT pushIds
 await notifique.push.messages.send({ ... }, { idempotencyKey: 'key' });
 await notifique.push.messages.list({ status: 'SENT' });
 await notifique.push.messages.get(messageId);

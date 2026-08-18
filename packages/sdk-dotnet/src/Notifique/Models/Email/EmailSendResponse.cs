@@ -8,7 +8,7 @@ public record EmailSendResponse(
 );
 
 public record EmailSendData(
-    [property: JsonPropertyName("emailIds")] List<string> EmailIds,
+    [property: JsonPropertyName("messageIds")] List<string> MessageIds,
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("count")] int? Count,
     [property: JsonPropertyName("scheduledAt")] string? ScheduledAt = null

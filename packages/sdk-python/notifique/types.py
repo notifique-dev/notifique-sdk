@@ -225,7 +225,7 @@ class EmailSendParams(TypedDict, total=False):
 
 class EmailSendResponse(TypedDict, total=False):
     success: bool
-    data: Dict[str, Any]  # emailIds, status, count, scheduledAt?
+    data: Dict[str, Any]  # messageIds, status, count, scheduledAt?
 
 
 class EmailStatus(TypedDict, total=False):
@@ -399,22 +399,41 @@ class PushOptions(TypedDict, total=False):
     priority: Literal["high", "normal", "low"]
 
 
-class SendPushParams(TypedDict, total=False):
-    """Alinhado a SendPushRequest do OpenAPI push-api."""
-    to: List[str]
+class PushSendPayload(TypedDict, total=False):
     title: str
     body: str
     url: str
     icon: str
     image: str
+    badge: str
     data: Dict[str, Any]
+
+
+class PushTemplatePayload(TypedDict, total=False):
+    templateId: str
+    variables: Dict[str, Any]
+
+
+class SendPushParams(TypedDict, total=False):
+    """OpenAPI NtfPush_SendPushRequest — to + type + payload."""
+    to: List[str]
+    type: Literal["push", "template"]
+    payload: Union[PushSendPayload, PushTemplatePayload, Dict[str, Any]]
     schedule: PushSchedule
     options: PushOptions
+    metadata: Dict[str, Any]
+
+
+class SendPushResponseData(TypedDict, total=False):
+    status: Literal["QUEUED", "SCHEDULED"]
+    count: int
+    messageIds: List[str]
+    scheduledAt: Optional[str]
 
 
 class SendPushResponse(TypedDict, total=False):
     success: bool
-    data: Dict[str, Any]
+    data: SendPushResponseData
 
 
 class PushMessageItem(TypedDict, total=False):

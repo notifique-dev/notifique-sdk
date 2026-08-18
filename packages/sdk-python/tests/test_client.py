@@ -175,7 +175,7 @@ def test_email_send():
             "https://api.notifique.dev/v1/email/messages",
             json={
                 "success": True,
-                "data": {"emailIds": ["em-1"], "status": "QUEUED", "count": 1},
+                "data": {"messageIds": ["em-1"], "status": "QUEUED", "count": 1},
             },
             status_code=202,
         )
@@ -186,7 +186,7 @@ def test_email_send():
             "subject": "Test",
             "html": "<p>Hi</p>",
         })
-        assert result["data"]["emailIds"] == ["em-1"]
+        assert result["data"]["messageIds"] == ["em-1"]
         body = m.request_history[0].json()
         assert body["from"] == "noreply@example.com"
 
@@ -292,7 +292,7 @@ def test_push_messages_send_list_get_cancel():
     with requests_mock.Mocker() as m:
         m.post(
             f"{BASE_URL}/push/messages",
-            json={"success": True, "data": {"status": "QUEUED", "count": 1, "pushIds": ["push-1"]}},
+            json={"success": True, "data": {"status": "QUEUED", "count": 1, "messageIds": ["push-1"]}},
             status_code=202,
         )
         m.get(
@@ -308,9 +308,12 @@ def test_push_messages_send_list_get_cancel():
             json={"success": True, "data": {"pushId": "push-1", "status": "CANCELLED"}},
         )
         client = Notifique(api_key="test-key")
-        send_res = client.push.messages.send({"to": ["dev1"], "title": "Hi", "body": "Body"})
-        assert send_res["data"]["status"] == "QUEUED"
-        assert send_res["data"]["pushIds"] == ["push-1"]
+        send_res = client.push.messages.send({
+            "to": ["dev1"],
+            "type": "push",
+            "payload": {"title": "Hi", "body": "Body"},
+        })
+        assert send_res["data"]["messageIds"] == ["push-1"]
         list_res = client.push.messages.list()
         assert len(list_res["data"]) == 1
         get_res = client.push.messages.get("push-1")

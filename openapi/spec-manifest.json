@@ -1,0 +1,28 @@
+{
+  "docsRoot": "../notifique-docs",
+  "specs": [
+    "whatsapp-api/api-reference/openapi-whatsapp.json",
+    "sms-api/api-reference/openapi-sms.json",
+    "telegram-api/api-reference/openapi-telegram.json",
+    "instagram-api/api-reference/openapi-instagram.json",
+    "emails-api/api-reference/openapi-email.json",
+    "push-api/api-reference/openapi-push.json",
+    "rcs-api/api-reference/openapi-rcs.json",
+    "voice-api/api-reference/openapi-voice.json",
+    "platform-api/api-reference/openapi-platform.json",
+    "oauth-api/api-reference/openapi-oauth.json",
+    "guides/webhooks/api-reference/openapi-webhooks.json",
+    "guides/logs/api-reference/openapi-logs.json",
+    "guides/workspaces/api-reference/openapi-workspaces.json",
+    "phone-numbers-api/api-reference/openapi-phone-numbers.json",
+    "contacts-api/api-reference/openapi-contacts.json",
+    "template-api/api-reference/openapi-templates.json",
+    "automations-api/api-reference/openapi-automations.json",
+    "marketing-addons-api/api-reference/openapi-marketing-addons.json",
+    "short-links-api/api-reference/openapi-short-links.json",
+    "short-links-api/api-reference/openapi-conversions.json",
+    "ai-web-widget/api-reference/openapi-ai-web-widget.json",
+    "suppressions-api/api-reference/openapi-suppressions.json",
+    "guides/compliance/openapi-report.json"
+  ]
+}

@@ -3,7 +3,8 @@ Notifique SDK para Python — WhatsApp, SMS, Email, Push e envio por template.
 Alinhado à API v1 (api.notifique.dev).
 """
 
-from .client import Notifique, NotifiqueApiError
+from .client import Notifique, NotifiqueApiError, create_public_client
+from .dynamic_api import DynamicApi, build_dynamic_api
 from .types import (
     EmailCancelResponse,
     EmailDomainItem,
@@ -58,6 +59,9 @@ from .types import (
 __all__ = [
     "Notifique",
     "NotifiqueApiError",
+    "create_public_client",
+    "DynamicApi",
+    "build_dynamic_api",
     "WhatsAppMessageType",
     "WhatsAppSendParams",
     "WhatsAppSendResponse",
