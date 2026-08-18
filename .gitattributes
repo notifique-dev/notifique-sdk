@@ -4,7 +4,7 @@ packages/sdk-node export-ignore
 packages/sdk-go export-ignore
 packages/sdk-java export-ignore
 packages/sdk-dotnet export-ignore
-packages/sdk-elixir export-ignore
+packages/sdk-python export-ignore
 
 /examples export-ignore
 /scripts export-ignore
